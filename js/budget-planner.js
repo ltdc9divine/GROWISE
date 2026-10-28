@@ -21,11 +21,21 @@
     return percentages;
   }
 
-  function getPriorityKeys(goal, industry, channels) {
+  function getPriorityKeys(goal, industry, channels, audience) {
     const keys = [];
     if (channels === "none") keys.push("planner.priority.channel.none");
     else if (channels === "social") keys.push("planner.priority.channel.social");
     else keys.push("planner.priority.channel.other");
+
+    const audienceKeys = {
+      students: "planner.priority.audience.students",
+      "young-professionals": "planner.priority.audience.professionals",
+      "local-community": "planner.priority.audience.community",
+      families: "planner.priority.audience.families",
+      businesses: "planner.priority.audience.businesses",
+      general: "planner.priority.audience.general"
+    };
+    if (audienceKeys[audience]) keys.push(audienceKeys[audience]);
 
     if (industry === "food") keys.push("planner.priority.industry.food");
     else if (industry === "fashion") keys.push("planner.priority.industry.fashion");
@@ -76,6 +86,7 @@
     const goal = document.getElementById("goal").value;
     const industry = document.getElementById("industry").value;
     const channels = document.getElementById("channels").value;
+    const audience = document.getElementById("audience").value;
 
     document.getElementById("budgetDisplay").textContent = money(amount);
     document.getElementById("resultBudget").textContent = money(amount);
@@ -104,7 +115,7 @@
     document.getElementById("resultTitle").textContent = i18n.t(titleKey);
     document.querySelector(".result-panel .notice").textContent = i18n.t("planner.notice");
 
-    currentPriorityKeys = getPriorityKeys(goal, industry, channels);
+    currentPriorityKeys = getPriorityKeys(goal, industry, channels, audience);
     const priorityList = document.getElementById("priorityList");
     priorityList.replaceChildren();
     currentPriorityKeys.forEach((key, index) => {
@@ -122,10 +133,44 @@
   function buildPlanSummary() {
     const amount = Number(budget.value);
     const percentages = allocationPercents();
-    const name = document.getElementById("startupName").value.trim()
-      || i18n.t("planSummary.defaultStartup");
-    const product = document.getElementById("product").value.trim()
-      || i18n.t("planSummary.defaultOffer");
+    const valueOrNotProvided = (value) => value.trim() || i18n.t("planSummary.notProvided");
+    const name = valueOrNotProvided(document.getElementById("startupName").value);
+    const product = valueOrNotProvided(document.getElementById("product").value);
+    const selectedLabels = {
+      industry: {
+        product: "planner.industry.product",
+        food: "planner.industry.food",
+        service: "planner.industry.services",
+        education: "planner.industry.education",
+        fashion: "planner.industry.fashion",
+        tech: "planner.industry.technology"
+      },
+      audience: {
+        students: "planner.audience.students",
+        "young-professionals": "planner.audience.professionals",
+        "local-community": "planner.audience.community",
+        families: "planner.audience.families",
+        businesses: "planner.audience.businesses",
+        general: "planner.audience.general"
+      },
+      goal: {
+        awareness: "planner.goal.awareness",
+        engagement: "planner.goal.engagement",
+        leads: "planner.goal.leads",
+        sales: "planner.goal.sales"
+      },
+      channels: {
+        none: "planner.channels.none",
+        social: "planner.channels.social",
+        marketplace: "planner.channels.marketplace",
+        mixed: "planner.channels.mixed"
+      }
+    };
+    const selectLabel = (id) => {
+      const select = document.getElementById(id);
+      const key = selectedLabels[id]?.[select.value];
+      return key ? i18n.t(key) : i18n.t("planSummary.notProvided");
+    };
     const labels = [
       "planner.allocation.content",
       "planner.allocation.promotion",
@@ -143,7 +188,11 @@
       i18n.t("planSummary.title"),
       `${i18n.t("planSummary.startup")}: ${name}`,
       `${i18n.t("planSummary.offer")}: ${product}`,
+      `${i18n.t("planSummary.industry")}: ${selectLabel("industry")}`,
+      `${i18n.t("planSummary.audience")}: ${selectLabel("audience")}`,
       `${i18n.t("planSummary.monthlyBudget")}: ${money(amount)}`,
+      `${i18n.t("planSummary.goal")}: ${selectLabel("goal")}`,
+      `${i18n.t("planSummary.channels")}: ${selectLabel("channels")}`,
       "",
       `${i18n.t("planSummary.allocationTitle")}:`,
       ...allocation,
@@ -159,7 +208,7 @@
       `${i18n.t("planSummary.priorities")}:`,
       ...priorities,
       "",
-      i18n.t("planSummary.note")
+      `${i18n.t("planSummary.disclaimer")}: ${i18n.t("planner.notice")}`
     ].join("\n");
   }
 
@@ -192,25 +241,29 @@
   }
 
   function downloadSummary() {
+    let url = "";
+    let link;
     try {
       const blob = new Blob([buildPlanSummary()], { type: "text/plain;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      url = URL.createObjectURL(blob);
+      link = document.createElement("a");
       link.href = url;
       link.download = `${i18n.t("planSummary.filename")}.txt`;
       link.hidden = true;
       document.body.append(link);
       link.click();
       link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      window.setTimeout(() => URL.revokeObjectURL(url), 30000);
       window.Growise.toast(i18n.t("planner.download.success"));
     } catch (error) {
-      window.Growise.toast(i18n.t("common.downloadFailure"));
+      link?.remove();
+      if (url) URL.revokeObjectURL(url);
+      window.Growise.toast(i18n.t("planner.download.failure"));
     }
   }
 
   budget.addEventListener("input", updatePlan);
-  ["industry", "goal", "channels"].forEach((id) =>
+  ["industry", "goal", "channels", "audience"].forEach((id) =>
     document.getElementById(id).addEventListener("change", updatePlan)
   );
   document.getElementById("generatePlan").addEventListener("click", () => {
