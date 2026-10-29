@@ -74,7 +74,100 @@ document.addEventListener('growise:localechange',()=>{
 });
 const dateInput=document.getElementById('date');dateInput.min=new Date().toISOString().slice(0,10);
 const consultForm=document.getElementById('consultForm');
+const consultationStep=document.getElementById('consultationStep');
+const feedbackStep=document.getElementById('feedbackStep');
+const feedbackForm=document.getElementById('feedbackForm');
+const feedbackGroups={
+ overall:'feedback.rating.overall',
+ usability:'feedback.rating.usability',
+ usefulness:'feedback.rating.usefulness',
+ marketing:'feedback.rating.marketing',
+ planner:'feedback.rating.planner',
+ resources:'feedback.rating.resources',
+ assistant:'feedback.rating.assistant'
+};
 const invalidFields=new Map();
+let feedbackMissingKeys=[];
+let feedbackSubmitted=false;
+function renderRatingGroup(group){
+ const key=feedbackGroups[group.dataset.rating];
+ if(!key)return;
+ const groupName=i18n.t(key);
+ const selected=Number(group.dataset.value||0);
+ const stars=[...group.querySelectorAll('.rating-star')];
+ stars.forEach((star,index)=>{
+  const value=Number(star.dataset.ratingValue);
+  star.textContent=value<=selected?'★':'☆';
+  star.setAttribute('aria-label',i18n.t('feedback.rating.star',{group:groupName,rating:value}));
+  star.setAttribute('aria-checked',String(value===selected));
+  star.tabIndex=selected?(value===selected?0:-1):-1;
+ });
+ if(!selected&&stars[0])stars[0].tabIndex=0;
+}
+function renderFeedbackError(){
+ const error=document.getElementById('feedbackError');
+ const list=document.getElementById('feedbackMissingList');
+ list.replaceChildren();
+ feedbackMissingKeys.forEach(key=>{
+  const item=document.createElement('li');
+  item.textContent=i18n.t(key);
+  list.append(item);
+ });
+ error.hidden=feedbackMissingKeys.length===0;
+}
+function updateFeedbackLocalization(){
+ feedbackForm.querySelectorAll('.star-rating').forEach(renderRatingGroup);
+ renderFeedbackError();
+}
+function setRating(group,value){
+ group.dataset.value=String(value);
+ renderRatingGroup(group);
+ const key=feedbackGroups[group.dataset.rating];
+ if(key)feedbackMissingKeys=feedbackMissingKeys.filter(missing=>missing!==key);
+ renderFeedbackError();
+}
+feedbackForm.addEventListener('click',event=>{
+ const star=event.target.closest('.rating-star');
+ if(star)setRating(star.closest('.star-rating'),Number(star.dataset.ratingValue));
+});
+feedbackForm.addEventListener('keydown',event=>{
+ const star=event.target.closest('.rating-star');
+ if(!star)return;
+ const group=star.closest('.star-rating');
+ const current=Number(group.dataset.value||star.dataset.ratingValue);
+ let next=current;
+ if(event.key==='ArrowRight'||event.key==='ArrowUp')next=Math.min(5,current+1);
+ else if(event.key==='ArrowLeft'||event.key==='ArrowDown')next=Math.max(1,current-1);
+ else if(event.key==='Home')next=1;
+ else if(event.key==='End')next=5;
+ else return;
+ event.preventDefault();
+ setRating(group,next);
+ group.querySelector(`[data-rating-value="${next}"]`).focus();
+});
+document.getElementById('backToConsultation').addEventListener('click',()=>{
+ feedbackStep.hidden=true;
+ consultationStep.hidden=false;
+ consultationStep.classList.remove('form-step-enter');
+ requestAnimationFrame(()=>consultationStep.classList.add('form-step-enter'));
+ consultForm.querySelector('h2').focus();
+});
+feedbackForm.addEventListener('submit',event=>{
+ event.preventDefault();
+ if(feedbackSubmitted)return;
+ feedbackMissingKeys=Object.entries(feedbackGroups)
+  .filter(([name])=>!Number(feedbackForm.querySelector(`[data-rating="${name}"]`).dataset.value))
+  .map(([,key])=>key);
+ renderFeedbackError();
+ if(feedbackMissingKeys.length){
+  feedbackForm.querySelector(`[data-rating="${Object.keys(feedbackGroups).find(name=>!Number(feedbackForm.querySelector(`[data-rating="${name}"]`).dataset.value))}"] .rating-star`).focus();
+  return;
+ }
+ feedbackSubmitted=true;
+ feedbackForm.hidden=true;
+ document.getElementById('feedbackComplete').hidden=false;
+ document.getElementById('feedbackComplete').querySelector('.panel-title').focus();
+});
 function updateFieldValidity(field,key){
  if(key) {
   invalidFields.set(field,key);
@@ -94,13 +187,17 @@ consultForm.addEventListener('submit',e=>{
   else updateFieldValidity(field,null);
  });
  if(!e.target.reportValidity())return;
- document.getElementById('successMessage').classList.add('show');
- document.getElementById('successMessage').scrollIntoView({behavior:'smooth',block:'nearest'});
- toast(i18n.t('consultation.demo.toast'));
+ consultationStep.hidden=true;
+ feedbackStep.hidden=false;
+ feedbackStep.classList.remove('form-step-enter');
+ requestAnimationFrame(()=>feedbackStep.classList.add('form-step-enter'));
+ document.getElementById('feedbackTitle').focus();
 });
 document.addEventListener('growise:localechange',()=>{
  invalidFields.forEach((key,field)=>field.setCustomValidity(i18n.t(key)));
+ updateFeedbackLocalization();
 });
+updateFeedbackLocalization();
 function toast(message){const el=document.getElementById('toast');el.textContent=message;el.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove('show'),2800)}
 
 window.Growise = window.Growise || {};
