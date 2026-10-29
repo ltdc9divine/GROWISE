@@ -1,0 +1,58 @@
+(function(){
+
+const pageNames=['home','about','services','planner','resources','consultation'];
+const navlinks=document.getElementById('navlinks');
+function showPage(name,updateHash=true){
+ if(!pageNames.includes(name)) name='home';
+ document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.dataset.view===name));
+ document.querySelectorAll('[data-page]').forEach(a=>a.classList.toggle('active',a.dataset.page===name && a.closest('.navlinks')));
+ navlinks.classList.remove('open');
+ if(updateHash && location.hash!==`#${name}`) history.pushState({page:name},'',`#${name}`);
+ window.scrollTo({top:0,behavior:'smooth'});
+ setTimeout(observeReveals,80);
+}
+document.addEventListener('click',e=>{
+ const link=e.target.closest('[data-page]');
+ if(link){e.preventDefault();showPage(link.dataset.page);return;}
+});
+window.addEventListener('popstate',()=>showPage(location.hash.slice(1)||'home',false));
+window.addEventListener('load',()=>{const p=location.hash.slice(1);if(pageNames.includes(p))showPage(p,false);observeReveals();});
+document.getElementById('menuBtn').addEventListener('click',()=>navlinks.classList.toggle('open'));
+const observer = 'IntersectionObserver' in window ? new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target)}}),{threshold:.12}) : null;
+function observeReveals(){document.querySelectorAll('.page.active .reveal:not(.visible)').forEach(el=>observer?observer.observe(el):el.classList.add('visible'));}
+
+const articles={
+ budget:{title:'How to market your startup on a limited budget',intro:'A small budget is a reason to prioritize—not a reason to disappear.',items:[['1. Start with one audience','Choose a specific group and learn what they care about. A message for everyone usually feels relevant to no one.'],['2. Use a channel you can maintain','Pick one or two places where your audience already spends time. Consistency and useful information matter more than being everywhere.'],['3. Create reusable content','Turn customer questions into short posts, demonstrations, FAQs, and testimonials—with permission.'],['4. Test before scaling','Set a small spending cap and one clear objective. Compare results against your baseline before spending more.'],['5. Track behavior, not vanity alone','Record inquiries, qualified leads, purchases, and customer feedback—not likes in isolation.']]},
+ audience:{title:'Find your first target customer',intro:'A target audience is a practical hypothesis you can test, not a permanent label.',items:[['1. Describe a real situation','Who experiences the problem, when does it happen, and what do they do today?'],['2. Talk to potential customers','Ask about their behavior and frustrations before pitching your idea. Avoid leading questions.'],['3. Find a reachable group','Start with people you can actually interview, observe, or reach through a relevant community.'],['4. Refine with evidence','Notice repeated needs, objections, and buying triggers. Update your assumptions as you learn.']]},
+ content:{title:'Build a simple content system',intro:'A lightweight system makes consistency easier than inventing every post from scratch.',items:[['1. Pick three content pillars','For example: educate, demonstrate your product, and show customer stories or behind-the-scenes work.'],['2. Use questions as prompts','Answer the questions people ask before buying. One question can become a short video, carousel, and FAQ.'],['3. Batch production','Set aside a short weekly session to draft several pieces and schedule them if useful.'],['4. Review and repeat','Look for saves, shares, meaningful comments, profile visits, and inquiries to see what is useful.']]},
+ metrics:{title:'Metrics that matter in the beginning',intro:'The best metric depends on the question your campaign is trying to answer.',items:[['Awareness','Reach, relevant profile visits, and recall signals can help show whether people are discovering you.'],['Engagement','Saves, shares, substantive comments, and clicks are often more informative than likes alone.'],['Leads','Track qualified inquiries, response rate, and cost per lead if paid promotion is used.'],['Sales','Measure conversion, revenue, gross margin, and repeat purchase where data is available.'],['Make it actionable','Choose one primary metric before a test and decide what result would justify a change.']]},
+ validate:{title:'Validate an idea before spending more',intro:'Early learning can reduce the risk of investing in an offer customers do not yet understand or want.',items:[['1. State the assumption','Write down who has the problem, how painful it is, and why your offer may help.'],['2. Talk to people','Use open questions about current behavior and alternatives—not just whether they like your idea.'],['3. Run a small test','Try a prototype, sample, waitlist, or limited offer before committing to a large campaign.'],['4. Decide what evidence means','Set a clear learning goal and review what people actually do, not only what they say.']]},
+ experiment:{title:'Plan a 30-day marketing experiment',intro:'A small experiment should answer one useful question and have a clear limit.',items:[['Week 1 — Define','Choose one audience, one message, one channel, and one primary metric. Establish a baseline.'],['Week 2 — Launch','Publish the test and keep other changes limited so you can interpret results.'],['Week 3 — Observe','Collect customer feedback and monitor the chosen metric. Avoid changing everything at once.'],['Week 4 — Decide','Document what worked, what did not, and the next test. Scale only when evidence supports it.']]}
+};
+const modal=document.getElementById('articleModal');
+document.querySelectorAll('[data-article]').forEach(btn=>btn.addEventListener('click',()=>{
+ const a=articles[btn.dataset.article];document.getElementById('modalTitle').textContent=a.title;
+ document.getElementById('modalContent').innerHTML=`<p>${a.intro}</p><ol>${a.items.map(i=>`<li><strong style="color:var(--text)">${i[0]}</strong><br>${i[1]}</li>`).join('')}</ol>`;
+ modal.classList.add('open');
+}));
+document.getElementById('closeModal').addEventListener('click',()=>modal.classList.remove('open'));
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+document.getElementById('modalPlanner').addEventListener('click',()=>{modal.classList.remove('open');showPage('planner')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});
+document.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',()=>{
+ document.querySelectorAll('.filter').forEach(b=>b.classList.toggle('active',b===btn));
+ document.querySelectorAll('.resource-card').forEach(card=>card.style.display=btn.dataset.filter==='all'||card.dataset.category===btn.dataset.filter?'':'none');
+}));
+const dateInput=document.getElementById('date');dateInput.min=new Date().toISOString().slice(0,10);
+document.getElementById('consultForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ if(!e.target.reportValidity())return;
+ document.getElementById('successMessage').classList.add('show');
+ document.getElementById('successMessage').scrollIntoView({behavior:'smooth',block:'nearest'});
+ toast('Demo form validated. Connect a backend for real submissions.');
+});
+function toast(message){const el=document.getElementById('toast');el.textContent=message;el.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove('show'),2800)}
+
+window.Growise = window.Growise || {};
+window.Growise.toast = toast;
+})();

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b100e">
+<title>Growise — Your Partner in Startup Growth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+
+<script src="js/main.js" defer></script>
+<script src="js/particle-orb.js" defer></script>
+<script src="js/budget-planner.js" defer></script>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#home" data-page="home" aria-label="Growise home"><span class="brand-mark">↗</span> GROWISE</a>
+    <button class="menu-btn" id="menuBtn" aria-label="Open navigation">☰</button>
+    <nav class="navlinks" id="navlinks">
+      <a href="#home" data-page="home" class="active">Home</a><a href="#about" data-page="about">About Us</a><a href="#services" data-page="services">Services</a><a href="#planner" data-page="planner">Budget Planner</a><a href="#resources" data-page="resources">Resources</a><a href="#consultation" data-page="consultation">Consultation</a>
+      <a class="btn btn-primary nav-cta" href="#planner" data-page="planner">Plan your growth <span class="arrow">↗</span></a>
+    </nav>
+  </div>
+</header>
+<main>
+<section class="page active" id="page-home" data-view="home">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="eyebrow mono">Growth, with intention</div>
+        <h1 class="display">Your next<br>chapter <span class="lime">starts</span><br>smarter.</h1>
+        <p>Good ideas deserve a real chance. Growise helps student founders make smarter marketing decisions, spend with purpose, and build momentum that lasts.</p>
+        <div class="hero-actions"><a class="btn btn-primary" href="#planner" data-page="planner">Build my budget <span class="arrow">↗</span></a><a class="btn btn-ghost" href="#services" data-page="services">Explore services <span class="arrow">↗</span></a></div>
+        <div class="hero-note"><span class="status-dot"></span> Built for the next generation of student founders</div>
+      </div>
+      <div class="visual" id="heroVisual" aria-label="Animated growth orb">
+        <canvas id="particleOrb" class="particle-orb" aria-label="Khối cầu hạt 3D phát sáng, có thể kéo để xoay"></canvas><span class="spark" style="top:14%;left:48%"></span><span class="spark" style="top:58%;right:8%;animation-delay:.7s"></span><span class="spark" style="bottom:18%;left:23%;animation-delay:1.2s"></span>
+        <div class="orbit-label label-a"><span>Start small</span><strong>Think <i class="lime">big.</i></strong></div>
+        <div class="orbit-label label-b"><span>Spend with purpose</span><strong>Less waste<span class="lime"> ↘</span></strong></div>
+        <div class="orbit-label label-c"><span>Make every move count</span><strong class="lime">Grow wisely ↗</strong></div>
+      </div>
+    </div>
+    <div class="hero-bottom"><span class="mono">The smarter way to start</span><div class="metrics"><div class="metric"><strong>01</strong><span>Start with clarity</span></div><div class="metric"><strong>02</strong><span>Spend intentionally</span></div><div class="metric"><strong>03</strong><span>Learn as you grow</span></div></div></div>
+  </div>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head reveal"><div><div class="eyebrow mono">The challenge</div><h2 class="display">Big ambition.<br><span class="lime">Limited resources.</span></h2></div><p>Starting a business is hard enough. Marketing shouldn't feel like guesswork. Growise turns confusing choices into a clearer next step.</p></div>
+      <div class="grid3">
+        <article class="card reveal"><span class="card-num">01 / CLARITY</span><div class="iconbox">⌖</div><h3>Finding your people</h3><p>Understand who your customers are and where they are most likely to discover your brand.</p></article>
+        <article class="card reveal"><span class="card-num">02 / FOCUS</span><div class="iconbox">◉</div><h3>Choosing the right channels</h3><p>Focus your time and money on channels that fit your product, audience, and current stage.</p></article>
+        <article class="card reveal"><span class="card-num">03 / CONTROL</span><div class="iconbox">↗</div><h3>Making budget count</h3><p>Plan small experiments, track meaningful signals, and avoid spending before you learn.</p></article>
+      </div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:15px">
+    <div class="wrap split">
+      <div class="visual-panel reveal"><div class="growth-ring"><div class="growth-core"></div></div><div class="float-tag tag1">STRATEGY / 01</div><div class="float-tag tag2">Budget in balance <span class="lime">↗</span></div><div class="float-tag tag3">Small steps. Real learning.</div></div>
+      <div class="reveal"><div class="eyebrow mono">Why Growise</div><h2 class="display" style="font-size:clamp(38px,5vw,62px);margin:0">Make your next move a <span class="lime">smart one.</span></h2><div class="check-list"><div class="check-item"><div class="check">✓</div><div><strong>Practical, not overwhelming</strong><span>Simple frameworks you can apply without a big marketing team.</span></div></div><div class="check-item"><div class="check">✓</div><div><strong>Built around your budget</strong><span>Recommendations start with your actual resources—not an unrealistic ideal.</span></div></div><div class="check-item"><div class="check">✓</div><div><strong>Learn, test, improve</strong><span>Make decisions based on customer feedback and useful performance metrics.</span></div></div></div><a class="btn btn-ghost" href="#about" data-page="about">Our approach <span class="arrow">↗</span></a></div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:20px"><div class="wrap"><div class="section-head reveal"><div><div class="eyebrow mono">Your growth toolkit</div><h2 class="display">Everything starts<br>with a <span class="lime">plan.</span></h2></div><p>Start with a self-guided budget plan. Explore our services and learning resources whenever you need a clearer direction.</p></div><div class="grid3">
+    <article class="card reveal"><div class="iconbox">⌁</div><h3>Marketing strategy</h3><p>Find a direction that matches your customers, goals, and stage.</p><a class="card-link" href="#services" data-page="services">Explore services ↗</a></article>
+    <article class="card reveal"><div class="iconbox">▥</div><h3>Budget planner</h3><p>Turn a monthly budget into a practical starting allocation.</p><a class="card-link" href="#planner" data-page="planner">Build a plan ↗</a></article>
+    <article class="card reveal"><div class="iconbox">⌘</div><h3>Founder resources</h3><p>Learn the essentials through bite-sized, actionable guides.</p><a class="card-link" href="#resources" data-page="resources">Start learning ↗</a></article>
+  </div></div></section>
+  <section class="section" style="padding-top:0"><div class="wrap"><div class="cta-band reveal"><div><div class="mono" style="color:#29452a;margin-bottom:13px">Your idea deserves a plan</div><h2>Let's make your next move count.</h2><p>Start with a simple budget plan or tell us what's holding your startup back.</p></div><a class="btn btn-dark" href="#consultation" data-page="consultation">Talk to Growise ↗</a></div></div></section>
+</section>
+
+<section class="page" id="page-about" data-view="about">
+  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">About Growise / 01</div><h1 class="display">Growth is not luck.<br>It's <span class="lime">a practice.</span></h1><p>Growise is a marketing-support concept created around one belief: student founders should be able to make informed decisions, even when their resources are limited.</p></div>
+  <section class="section"><div class="about-story reveal"><div><div class="eyebrow mono">Our story</div><h2 class="display">Good ideas need more than <span class="lime">good timing.</span></h2></div><div><p>Many student entrepreneurs have a product they believe in, but lack the experience to identify customers, choose channels, allocate budgets, and evaluate campaign results. Professional marketing support can be out of reach at an early stage.</p><p>Growise is designed to bridge that gap with accessible guidance, practical planning tools, learning resources, and a path to personalized support.</p><p><strong style="color:var(--text)">Our role is to make the next step clearer—not to promise overnight success.</strong></p></div></div>
+  <div class="values reveal"><div class="value"><strong>Our mission</strong><p>Make useful marketing knowledge and practical planning more accessible to student founders.</p></div><div class="value"><strong>Our vision</strong><p>Become a trusted starting point for students building thoughtful, sustainable ventures.</p></div><div class="value"><strong>Our principles</strong><p>Clarity over hype. Evidence over assumptions. Learning before scaling.</p></div></div></section>
+  <section class="section" style="padding-top:0"><div class="section-head"><div><div class="eyebrow mono">Who we serve</div><h2 class="display">Made for the <span class="lime">first steps.</span></h2></div><p>Our intended audience is senior HUFLIT students exploring entrepreneurship and early-stage student businesses.</p></div><div class="grid3"><article class="card"><div class="iconbox">✳</div><h3>Idea-stage founders</h3><p>Students who need to validate a business idea and learn who might buy it.</p></article><article class="card"><div class="iconbox">↗</div><h3>Early-stage startups</h3><p>Small teams beginning to promote a product and looking for a repeatable approach.</p></article><article class="card"><div class="iconbox">◎</div><h3>Student-led businesses</h3><p>Founders who want to understand results and make limited marketing funds go further.</p></article></div></section>
+  <section class="section" style="padding-top:0"><div class="cta-band"><div><h2>Small teams can make thoughtful moves.</h2><p>Explore the tools and services built around your current stage.</p></div><a class="btn btn-dark" href="#services" data-page="services">Explore services ↗</a></div></section></div>
+</section>
+
+<section class="page" id="page-services" data-view="services">
+  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">What we do / 02</div><h1 class="display">Less guesswork.<br><span class="lime">More direction.</span></h1><p>Four focused support areas designed to help student startups move from scattered marketing activity to a clearer plan.</p></div>
+  <section class="section"><div class="service-list">
+    <article class="service-row"><div class="service-number">01 /</div><h3>Marketing Strategy Consultation</h3><p>Clarify your audience, positioning, marketing objectives, and channels based on your business stage and resources.</p><a href="#consultation" data-page="consultation" class="circle-arrow">↗</a></article>
+    <article class="service-row"><div class="service-number">02 /</div><h3>Marketing Plan Development</h3><p>Build a practical action plan with priorities, a timeline, content ideas, and checkpoints for learning.</p><a href="#consultation" data-page="consultation" class="circle-arrow">↗</a></article>
+    <article class="service-row"><div class="service-number">03 /</div><h3>Budget Optimization</h3><p>Compare possible uses of your budget, set spending limits, and prioritize low-cost tests before scaling.</p><a href="#planner" data-page="planner" class="circle-arrow">↗</a></article>
+    <article class="service-row"><div class="service-number">04 /</div><h3>Campaign Performance Review</h3><p>Review reach, engagement, leads, conversion, and sales where data is available—then identify what to test next.</p><a href="#consultation" data-page="consultation" class="circle-arrow">↗</a></article>
+  </div></section>
+  <section class="section" style="padding-top:0"><div class="section-head"><div><div class="eyebrow mono">How it works</div><h2 class="display">A clear path from idea to <span class="lime">action.</span></h2></div></div><div class="grid3"><article class="card"><span class="card-num">STEP 01</span><h3>Understand</h3><p>Describe your product, audience, current challenges, and constraints.</p></article><article class="card"><span class="card-num">STEP 02</span><h3>Prioritize</h3><p>Choose the most important marketing question to address first.</p></article><article class="card"><span class="card-num">STEP 03</span><h3>Learn & adjust</h3><p>Run manageable experiments and use results to decide what comes next.</p></article></div></section>
+  <section class="section" style="padding-top:0"><div class="cta-band"><div><h2>Not sure what you need yet?</h2><p>Start with the budget planner. It gives you a structured first draft, not a one-size-fits-all answer.</p></div><a class="btn btn-dark" href="#planner" data-page="planner">Open budget planner ↗</a></div></section></div>
+</section>
+
+<section class="page" id="page-planner" data-view="planner">
+  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">Interactive tool / 03</div><h1 class="display">Your budget.<br>Your <span class="lime">next move.</span></h1><p>Create a starting marketing allocation based on your budget, industry, goals, and current channels. Adjust the numbers as you learn about your customers.</p></div>
+  <section class="section"><div class="planner-layout">
+    <div class="form-panel"><h2 class="panel-title">Tell us about your startup</h2><p class="panel-sub">A few details help tailor the first draft of your marketing plan.</p>
+      <div class="field-grid">
+        <div class="field"><label for="startupName">Startup name</label><input id="startupName" placeholder="e.g. Mộc Bakery"></div>
+        <div class="field"><label for="industry">Business industry</label><select id="industry"><option value="product">Consumer product</option><option value="food">Food & beverage</option><option value="service">Services</option><option value="education">Education</option><option value="fashion">Fashion & beauty</option><option value="tech">Technology / digital</option></select></div>
+        <div class="field full"><label for="product">Product or service</label><input id="product" placeholder="What are you offering?"></div>
+        <div class="field"><label for="audience">Target customers</label><select id="audience"><option>University students</option><option>Young professionals</option><option>Local community</option><option>Parents and families</option><option>Businesses</option><option>General consumers</option></select></div>
+        <div class="field"><label for="goal">Main marketing objective</label><select id="goal"><option value="awareness">Build brand awareness</option><option value="engagement">Increase engagement</option><option value="leads">Generate leads / inquiries</option><option value="sales">Increase sales</option></select></div>
+        <div class="field full"><label for="channels">Current marketing channels</label><select id="channels"><option value="none">Just starting — no channels yet</option><option value="social">Social media only</option><option value="marketplace">Marketplace / e-commerce</option><option value="mixed">Social media + other channels</option></select></div>
+      </div>
+      <div class="field"><label for="budget">Monthly marketing budget (VND)</label><div class="budget-number" id="budgetDisplay">1,000,000 ₫</div><input class="range" id="budget" type="range" min="200000" max="10000000" step="100000" value="1000000"><div class="range-labels"><span>200,000 ₫</span><span>10,000,000 ₫</span></div></div>
+      <button class="btn btn-primary" id="generatePlan" style="width:100%">Generate my plan ↗</button>
+    </div>
+    <div class="result-panel"><div class="eyebrow mono">Your first-draft allocation</div><h2 class="panel-title" id="resultTitle">A little budget. A focused start.</h2><p class="panel-sub" id="resultIntro">Begin with consistent content and small experiments. Learn what resonates before increasing spend.</p>
+      <div class="mono">Monthly budget</div><div class="budget-number" id="resultBudget">1,000,000 ₫</div>
+      <div class="allocation" id="allocation">
+        <div class="alloc-row"><span>Content & creative</span><div class="alloc-track"><div class="alloc-fill" style="width:40%"></div></div><span class="alloc-amount">400,000 ₫</span></div>
+        <div class="alloc-row"><span>Paid promotion</span><div class="alloc-track"><div class="alloc-fill" style="width:25%"></div></div><span class="alloc-amount">250,000 ₫</span></div>
+        <div class="alloc-row"><span>Customer research</span><div class="alloc-track"><div class="alloc-fill" style="width:20%"></div></div><span class="alloc-amount">200,000 ₫</span></div>
+        <div class="alloc-row"><span>Testing & reserve</span><div class="alloc-track"><div class="alloc-fill" style="width:15%"></div></div><span class="alloc-amount">150,000 ₫</span></div>
+      </div>
+      <div class="kpi-grid"><div class="kpi"><span>Suggested first test</span><strong id="kpiTest">7–14 days</strong></div><div class="kpi"><span>Primary metric</span><strong id="kpiMetric">Engagement</strong></div></div>
+      <div class="priority-list" id="priorityList"><div class="priority"><b>01</b><span>Publish useful, consistent content for one clearly defined audience.</span></div><div class="priority"><b>02</b><span>Test one small paid campaign only after you have a clear message.</span></div><div class="priority"><b>03</b><span>Track inquiries and customer feedback—not likes alone.</span></div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px"><button class="btn btn-ghost" id="copyPlan">Copy plan summary ↗</button><a class="btn btn-ghost" href="#consultation" data-page="consultation">Get support ↗</a></div>
+      <div class="notice">This is an illustrative planning tool for educational purposes, not a guarantee of results or professional financial advice. Percentages are starting assumptions and should be adjusted to your product, margins, audience, and actual campaign data.</div>
+    </div>
+  </div></section></div>
+</section>
+
+<section class="page" id="page-resources" data-view="resources">
+  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">The founder library / 04</div><h1 class="display">Learn the basics.<br><span class="lime">Move with purpose.</span></h1><p>Short, practical guides for student founders who want to market thoughtfully, understand their customers, and make limited resources go further.</p></div>
+  <section class="section"><div class="resource-tools" id="filters"><button class="filter active" data-filter="all">All resources</button><button class="filter" data-filter="strategy">Strategy</button><button class="filter" data-filter="budget">Budgeting</button><button class="filter" data-filter="content">Content</button><button class="filter" data-filter="metrics">Measurement</button></div>
+    <div class="resource-grid" id="resourceGrid">
+      <article class="resource-card" data-category="budget"><div class="resource-art"><span class="art-symbol">₫</span></div><div class="resource-body"><div class="resource-meta"><span>BUDGETING</span><span>5 MIN READ</span></div><h3>How to market your startup on a limited budget</h3><p>Prioritize free channels, create reusable content, and test before you scale.</p><button class="resource-read" data-article="budget">Read the guide ↗</button></div></article>
+      <article class="resource-card" data-category="strategy"><div class="resource-art" style="background:radial-gradient(circle at 50% 50%,#3b5940,#111b14 65%)"><span class="art-symbol">◎</span></div><div class="resource-body"><div class="resource-meta"><span>STRATEGY</span><span>4 MIN READ</span></div><h3>Find your first target customer</h3><p>Move beyond “everyone” and define a group whose needs you can actually serve.</p><button class="resource-read" data-article="audience">Read the guide ↗</button></div></article>
+      <article class="resource-card" data-category="content"><div class="resource-art" style="background:radial-gradient(circle at 50% 50%,#4c6641,#101812 65%)"><span class="art-symbol">✳</span></div><div class="resource-body"><div class="resource-meta"><span>CONTENT</span><span>6 MIN READ</span></div><h3>Build a simple content system</h3><p>Use a few repeatable content pillars to stay consistent without burning out.</p><button class="resource-read" data-article="content">Read the guide ↗</button></div></article>
+      <article class="resource-card" data-category="metrics"><div class="resource-art" style="background:radial-gradient(circle at 50% 50%,#4a6341,#101812 65%)"><span class="art-symbol">↗</span></div><div class="resource-body"><div class="resource-meta"><span>MEASUREMENT</span><span>5 MIN READ</span></div><h3>Metrics that matter in the beginning</h3><p>Choose metrics that connect marketing activity to real customer behavior.</p><button class="resource-read" data-article="metrics">Read the guide ↗</button></div></article>
+      <article class="resource-card" data-category="strategy"><div class="resource-art" style="background:radial-gradient(circle at 50% 50%,#4d5f3b,#101812 65%)"><span class="art-symbol">⌁</span></div><div class="resource-body"><div class="resource-meta"><span>STRATEGY</span><span>4 MIN READ</span></div><h3>Validate an idea before spending more</h3><p>Use conversations, prototypes, and small tests to learn what customers value.</p><button class="resource-read" data-article="validate">Read the guide ↗</button></div></article>
+      <article class="resource-card" data-category="budget"><div class="resource-art" style="background:radial-gradient(circle at 50% 50%,#365c40,#101812 65%)"><span class="art-symbol">▥</span></div><div class="resource-body"><div class="resource-meta"><span>BUDGETING</span><span>3 MIN READ</span></div><h3>Plan a 30-day marketing experiment</h3><p>Set one goal, define a small test, and decide in advance what success means.</p><button class="resource-read" data-article="experiment">Read the guide ↗</button></div></article>
+    </div>
+  </section></div>
+</section>
+
+<section class="page" id="page-consultation" data-view="consultation">
+  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">Let's talk / 05</div><h1 class="display">Every startup has<br>a <span class="lime">next question.</span></h1><p>Tell us where you're stuck. The more context you share, the easier it is to understand what kind of support could help.</p></div>
+  <section class="section"><div class="consult-layout">
+    <div><div class="eyebrow mono">Start a conversation</div><h2 class="display" style="font-size:clamp(35px,4vw,52px);margin:0 0 18px">Let's work out your next move.</h2><p class="muted" style="font-size:13px;line-height:1.9">Whether you are choosing a channel, planning a budget, or trying to understand campaign results, start by sharing the challenge.</p>
+      <div class="contact-item"><div class="iconbox">⌖</div><div><strong>Personalized context</strong><span>Share your business stage, audience, and immediate priorities.</span></div></div>
+      <div class="contact-item"><div class="iconbox">◷</div><div><strong>Flexible consultation</strong><span>Choose online or in-person as a preferred method. Availability needs confirmation.</span></div></div>
+      <div class="contact-item"><div class="iconbox">↗</div><div><strong>Practical next steps</strong><span>Focus on useful actions that fit your current resources.</span></div></div>
+      <p class="notice">Demo note: this prototype validates the form in your browser but does not send submissions to a server or book an actual appointment.</p>
+    </div>
+    <form class="form-panel" id="consultForm"><h2 class="panel-title">Book a consultation</h2><p class="panel-sub">Fields marked * are required.</p>
+      <div class="field-grid">
+        <div class="field"><label for="fullName">Full name *</label><input id="fullName" required placeholder="Your name"></div>
+        <div class="field"><label for="email">Email address *</label><input id="email" type="email" required placeholder="you@example.com"></div>
+        <div class="field"><label for="consultStartup">Startup name</label><input id="consultStartup" placeholder="Your startup"></div>
+        <div class="field"><label for="consultIndustry">Business industry *</label><select id="consultIndustry" required><option value="">Choose an industry</option><option>Food & beverage</option><option>Fashion & beauty</option><option>Education</option><option>Consumer products</option><option>Services</option><option>Technology</option><option>Other</option></select></div>
+        <div class="field"><label for="consultBudget">Monthly marketing budget</label><select id="consultBudget"><option>Not decided yet</option><option>Under 500,000 VND</option><option>500,000–1,000,000 VND</option><option>1,000,000–3,000,000 VND</option><option>3,000,000–5,000,000 VND</option><option>Over 5,000,000 VND</option></select></div>
+        <div class="field"><label for="method">Preferred method *</label><select id="method" required><option value="">Choose a method</option><option>Online meeting</option><option>In-person meeting</option><option>Email first</option></select></div>
+        <div class="field"><label for="date">Preferred date</label><input id="date" type="date"></div>
+        <div class="field"><label for="time">Preferred time</label><select id="time"><option>Flexible</option><option>Morning (9 AM–12 PM)</option><option>Afternoon (1 PM–5 PM)</option><option>Evening (6 PM–8 PM)</option></select></div>
+        <div class="field full"><label for="challenge">Current marketing challenges *</label><textarea id="challenge" required placeholder="What are you trying to solve? e.g. choosing channels, low engagement, limited budget..."></textarea></div>
+      </div>
+      <button class="btn btn-primary" type="submit" style="width:100%">Submit consultation request ↗</button>
+      <div class="success-message" id="successMessage" role="status">Your demo request has been validated in this browser. No message has been sent yet. Connect a backend or form service to receive real submissions.</div>
+    </form>
+  </div></section></div>
+</section>
+</main>
+<footer class="footer"><div class="wrap"><div class="footer-top"><div class="footer-brand"><a class="brand" href="#home" data-page="home"><span class="brand-mark">↗</span> GROWISE</a><p>Your Partner in Startup Growth. Helping student founders make smarter marketing decisions, one step at a time.</p></div><div class="footer-links"><div><strong>Explore</strong><a href="#about" data-page="about">About us</a><a href="#services" data-page="services">Services</a><a href="#resources" data-page="resources">Resources</a></div><div><strong>Tools</strong><a href="#planner" data-page="planner">Budget planner</a><a href="#consultation" data-page="consultation">Book a consultation</a></div><div><strong>Our principle</strong><span style="font-size:11px;color:var(--muted)">Clarity over hype.</span><span style="font-size:11px;color:var(--muted)">Learn before scaling.</span></div></div></div><div class="footer-bottom"><span>© 2026 Growise · Student startup growth concept</span><span>Made for ideas in motion ↗</span></div></div></footer>
+<div class="toast" id="toast" role="status"></div>
+<div class="modal" id="articleModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-box"><div class="modal-head"><div><div class="eyebrow mono">Growise field notes</div><h3 id="modalTitle">Guide title</h3></div><button class="close" id="closeModal" aria-label="Close guide">×</button></div><div id="modalContent"></div><button class="btn btn-primary" id="modalPlanner">Build your plan ↗</button></div></div>
+
+</body>
+</html>

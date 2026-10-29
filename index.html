@@ -12,6 +12,7 @@
 
 <script src="js/translations.js" defer></script>
 <script src="js/main.js" defer></script>
+<script src="js/subpage-orbits.js" defer></script>
 <script src="js/particle-orb.js" defer></script>
 <script src="js/budget-planner.js" defer></script>
 </head>
@@ -79,7 +80,33 @@
 </section>
 
 <section class="page" id="page-about" data-view="about">
-  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">About Growise / 01</div><h1 class="display" data-i18n-html="about.hero.title">Growth is not luck.<br>It's <span class="lime">a practice.</span></h1><p>Growise is an academic website prototype exploring how accessible marketing guidance may support HUFLIT seniors who are considering or building student startups.</p></div>
+  <div class="wrap"><div class="page-hero page-hero--about">
+    <div class="page-hero-copy"><div class="eyebrow mono">About Growise / 01</div><h1 class="display" data-i18n-html="about.hero.title">Growth is not luck.<br>It's <span class="lime">a practice.</span></h1><p>Growise is an academic website prototype exploring how accessible marketing guidance may support HUFLIT seniors who are considering or building student startups.</p></div>
+    <div class="page-hero-visual page-visual--growth" data-orbit-scene="growth" aria-hidden="true">
+      <svg class="page-hero-art" viewBox="0 0 420 340" focusable="false">
+        <defs><radialGradient id="growthGlow"><stop stop-color="#B9FF4A" stop-opacity=".38"/><stop offset="1" stop-color="#B9FF4A" stop-opacity="0"/></radialGradient><radialGradient id="growthCore"><stop stop-color="#F4FFD9"/><stop offset=".34" stop-color="#B9FF4A"/><stop offset="1" stop-color="#7FAF2F"/></radialGradient></defs>
+        <circle class="art-aura" cx="210" cy="170" r="132" fill="url(#growthGlow)"/>
+        <g class="hero-orbit growth-orbit--main">
+          <ellipse class="art-orbit art-orbit--slow" cx="210" cy="170" rx="132" ry="55" transform="rotate(-27 210 170)"/>
+          <path class="art-link" d="M92 202 156 168 209 171 272 126 326 146"/>
+          <circle class="art-node art-node--soft" cx="92" cy="202" r="6"/>
+          <circle class="art-node" cx="156" cy="168" r="5"/>
+          <circle class="art-node" cx="272" cy="126" r="7"/>
+          <circle class="art-node art-node--soft" cx="326" cy="146" r="5"/>
+          <circle class="art-particle art-particle--one" cx="114" cy="105" r="2"/>
+          <circle class="art-particle art-particle--two" cx="300" cy="232" r="2.5"/>
+          <circle class="art-particle art-particle--three" cx="224" cy="75" r="2"/>
+        </g>
+        <g class="hero-orbit growth-orbit--cross">
+          <ellipse class="art-orbit art-orbit--reverse" cx="210" cy="170" rx="105" ry="82" transform="rotate(42 210 170)"/>
+        </g>
+        <circle class="art-node-halo" cx="210" cy="170" r="28"/>
+        <circle class="art-node art-node--core" cx="210" cy="170" r="18"/>
+        <circle class="art-node-highlight" cx="205" cy="164" r="4"/>
+      </svg>
+      <canvas class="subpage-orbit-canvas" aria-hidden="true"></canvas>
+    </div>
+  </div>
   <section class="section"><div class="about-story reveal"><div><div class="eyebrow mono">Our story</div><h2 class="display" data-i18n-html="about.story.title">Good ideas need more than <span class="lime">good timing.</span></h2></div><div><p>Early-stage founders may need to decide whom to serve, which channel to try, how to plan a limited budget, and what to measure. These are the practical questions this project is designed to help users explore; they are not presented as proven research findings.</p><p>The research topic is “Exploring Factors Affecting Start-up Success among HUFLIT Seniors: Developing a Marketing Support Website for Student Start-ups.” Growise is the website prototype developed for that project.</p><p><strong style="color:var(--text)">This prototype offers educational guidance and planning tools. It is not a professional marketing agency, does not verify market assumptions, and cannot guarantee business or campaign results.</strong></p></div></div>
   <div class="values reveal"><div class="value"><strong>Our mission</strong><p>Make useful marketing knowledge and practical planning more accessible to student founders.</p></div><div class="value"><strong>Our vision</strong><p>Become a trusted starting point for students building thoughtful, sustainable ventures.</p></div><div class="value"><strong>Our principles</strong><p>Clarity over hype. Evidence over assumptions. Learning before scaling.</p></div></div></section>
   <section class="section" style="padding-top:0"><div class="section-head"><div><div class="eyebrow mono">Who we serve</div><h2 class="display" data-i18n-html="about.audience.title">Made for the <span class="lime">first steps.</span></h2></div><p>Our intended audience is senior HUFLIT students exploring entrepreneurship and early-stage student businesses.</p></div><div class="grid3"><article class="card"><div class="iconbox">✳</div><h3>Idea-stage founders</h3><p>Students who need to validate a business idea and learn who might buy it.</p></article><article class="card"><div class="iconbox">↗</div><h3>Early-stage startups</h3><p>Small teams beginning to promote a product and looking for a repeatable approach.</p></article><article class="card"><div class="iconbox">◎</div><h3>Student-led businesses</h3><p>Founders who want to understand results and make limited marketing funds go further.</p></article></div></section>
@@ -87,7 +114,31 @@
 </section>
 
 <section class="page" id="page-services" data-view="services">
-  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">What we do / 02</div><h1 class="display" data-i18n-html="services.hero.title">Less guesswork.<br><span class="lime">More direction.</span></h1><p>Four focused support areas designed to help student startups move from scattered marketing activity to a clearer plan.</p></div>
+  <div class="wrap"><div class="page-hero page-hero--services">
+    <div class="page-hero-copy"><div class="eyebrow mono">What we do / 02</div><h1 class="display" data-i18n-html="services.hero.title">Less guesswork.<br><span class="lime">More direction.</span></h1><p>Four focused support areas designed to help student startups move from scattered marketing activity to a clearer plan.</p></div>
+    <div class="page-hero-visual page-visual--system" data-orbit-scene="services" aria-hidden="true">
+      <svg class="page-hero-art" viewBox="0 0 420 340" focusable="false">
+        <defs><radialGradient id="systemGlow"><stop stop-color="#B9FF4A" stop-opacity=".3"/><stop offset="1" stop-color="#B9FF4A" stop-opacity="0"/></radialGradient><radialGradient id="systemNode"><stop stop-color="#F4FFD9"/><stop offset=".5" stop-color="#B9FF4A"/><stop offset="1" stop-color="#8DBA40"/></radialGradient></defs>
+        <circle class="art-aura" cx="210" cy="170" r="132" fill="url(#systemGlow)"/>
+        <g class="hero-orbit system-orbit-track">
+          <circle class="art-orbit art-orbit--pulse" cx="210" cy="170" r="103"/>
+          <path class="art-link" d="M210 170 210 66M210 170 314 170M210 170 210 274M210 170 106 170"/>
+          <path class="art-link art-link--faint" d="m210 66 104 104-104 104L106 170 210 66"/>
+          <circle class="art-node art-node--satellite" cx="210" cy="66" r="13"/>
+          <circle class="art-node art-node--satellite" cx="314" cy="170" r="13"/>
+          <circle class="art-node art-node--satellite" cx="210" cy="274" r="13"/>
+          <circle class="art-node art-node--satellite" cx="106" cy="170" r="13"/>
+          <circle class="art-particle art-particle--one" cx="135" cy="94" r="2"/>
+          <circle class="art-particle art-particle--two" cx="285" cy="247" r="2.5"/>
+          <circle class="art-particle art-particle--three" cx="329" cy="108" r="2"/>
+        </g>
+        <circle class="art-node-halo" cx="210" cy="170" r="30"/>
+        <circle class="art-node art-node--core" cx="210" cy="170" r="20"/>
+        <circle class="art-node-highlight" cx="204" cy="163" r="4"/>
+      </svg>
+      <canvas class="subpage-orbit-canvas" aria-hidden="true"></canvas>
+    </div>
+  </div>
   <section class="section"><div class="service-list">
     <article class="service-row"><div class="service-number">01 /</div><h3>Marketing Strategy Consultation</h3><p>If you are unsure whom to reach or which channel might fit, a future consultation could review the audience, goals, and constraints you provide. Intended output: a discussion outline with questions to investigate. Scope: this prototype does not provide professional market research; assumptions still need validation.</p><a href="#consultation" data-page="consultation" class="circle-arrow" aria-label="Discuss strategy support" data-i18n-aria-label="services.cta.strategy">↗</a></article>
     <article class="service-row"><div class="service-number">02 /</div><h3>Marketing Plan Development</h3><p>If marketing tasks feel scattered, the proposed planning support could organize a stated goal into draft priorities, timing, content prompts, and review points. Intended output: an outline to adapt. Scope: this prototype does not run campaigns; any plan would depend on the information provided.</p><a href="#consultation" data-page="consultation" class="circle-arrow" aria-label="Discuss marketing planning" data-i18n-aria-label="services.cta.plan">↗</a></article>
@@ -99,7 +150,39 @@
 </section>
 
 <section class="page" id="page-planner" data-view="planner">
-  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">Interactive tool / 03</div><h1 class="display" data-i18n-html="planner.hero.title">Your budget.<br>Your <span class="lime">next move.</span></h1><p>Create an illustrative starting allocation from your budget, industry, goal, and current channels. Use it to frame a small test, then revisit the assumptions as you learn; it is not a revenue forecast.</p></div>
+  <div class="wrap"><div class="page-hero page-hero--planner">
+    <div class="page-hero-copy"><div class="eyebrow mono">Interactive tool / 03</div><h1 class="display" data-i18n-html="planner.hero.title">Your budget.<br>Your <span class="lime">next move.</span></h1><p>Create an illustrative starting allocation from your budget, industry, goal, and current channels. Use it to frame a small test, then revisit the assumptions as you learn; it is not a revenue forecast.</p></div>
+    <div class="page-hero-visual page-visual--budget" data-orbit-scene="budget" aria-hidden="true">
+      <svg class="page-hero-art" viewBox="0 0 420 340" focusable="false">
+        <defs><radialGradient id="budgetGlow"><stop stop-color="#B9FF4A" stop-opacity=".28"/><stop offset="1" stop-color="#B9FF4A" stop-opacity="0"/></radialGradient><radialGradient id="budgetCore"><stop stop-color="#F4FFD9"/><stop offset=".42" stop-color="#B9FF4A"/><stop offset="1" stop-color="#7FAF2F"/></radialGradient></defs>
+        <circle class="art-aura" cx="210" cy="170" r="132" fill="url(#budgetGlow)"/>
+        <g class="hero-orbit budget-orbit--outer">
+          <ellipse class="art-ring art-ring--underside" cx="210" cy="181" rx="125" ry="48" transform="rotate(-27 210 181)"/>
+          <ellipse class="art-ring art-ring--back" cx="210" cy="170" rx="125" ry="48" transform="rotate(-27 210 170)"/>
+          <path class="art-segment art-segment--one" d="M95 139a125 48-27 0 1 43-34"/>
+          <circle class="art-node" cx="113" cy="128" r="6"/>
+        </g>
+        <g class="hero-orbit budget-orbit--middle">
+          <ellipse class="art-ring art-ring--middle" cx="210" cy="170" rx="99" ry="39" transform="rotate(25 210 170)"/>
+          <path class="art-segment art-segment--two" d="M247 127a99 39 25 0 1 44 38"/>
+          <circle class="art-node" cx="290" cy="160" r="6"/>
+        </g>
+        <g class="hero-orbit budget-orbit--inner">
+          <ellipse class="art-ring art-ring--front" cx="210" cy="170" rx="71" ry="28"/>
+          <path class="art-segment art-segment--three" d="M175 186a71 28-27 0 1 36-39"/>
+          <circle class="art-node art-node--soft" cx="176" cy="213" r="5"/>
+        </g>
+        <path class="art-link art-link--faint" d="m210 113 0 114m-58-57h116"/>
+        <circle class="art-node-halo" cx="210" cy="170" r="24"/>
+        <circle class="art-node art-node--core" cx="210" cy="170" r="14"/>
+        <circle class="art-node-highlight" cx="206" cy="165" r="3"/>
+        <circle class="art-particle art-particle--one" cx="126" cy="226" r="2"/>
+        <circle class="art-particle art-particle--two" cx="296" cy="101" r="2.5"/>
+        <circle class="art-particle art-particle--three" cx="226" cy="77" r="2"/>
+      </svg>
+      <canvas class="subpage-orbit-canvas" aria-hidden="true"></canvas>
+    </div>
+  </div>
   <section class="section"><div class="planner-layout">
     <div class="form-panel"><h2 class="panel-title">Tell us about your startup</h2><p class="panel-sub">Choose the options closest to your current situation. The result is a draft based on simple assumptions, not a forecast or a guaranteed recommendation.</p>
       <div class="field-grid">
@@ -130,7 +213,24 @@
 </section>
 
 <section class="page" id="page-resources" data-view="resources">
-  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">The founder library / 04</div><h1 class="display" data-i18n-html="resources.hero.title">Learn the basics.<br><span class="lime">Move with purpose.</span></h1><p>Short, practical guides for student founders who want to market thoughtfully, understand their customers, and make limited resources go further.</p></div>
+  <div class="wrap"><div class="page-hero page-hero--resources">
+    <div class="page-hero-copy"><div class="eyebrow mono">The founder library / 04</div><h1 class="display" data-i18n-html="resources.hero.title">Learn the basics.<br><span class="lime">Move with purpose.</span></h1><p>Short, practical guides for student founders who want to market thoughtfully, understand their customers, and make limited resources go further.</p></div>
+    <div class="page-hero-visual page-visual--learning" data-orbit-scene="resources" aria-hidden="true">
+      <svg class="learning-orbit" viewBox="0 0 420 340" focusable="false">
+        <g class="hero-orbit learning-orbit-track">
+          <ellipse cx="210" cy="170" rx="144" ry="84" transform="rotate(-25 210 170)"/>
+          <circle cx="341" cy="109" r="4"/>
+          <circle cx="114" cy="266" r="4"/>
+          <circle cx="114" cy="135" r="4"/>
+        </g>
+      </svg>
+      <div class="learning-panel learning-panel--back"><span class="learning-mark"></span><i></i><i></i><i></i><b></b></div>
+      <div class="learning-panel learning-panel--middle"><span class="learning-mark"></span><i></i><i></i><i></i><b></b></div>
+      <div class="learning-panel learning-panel--front"><span class="learning-mark"></span><i></i><i></i><i></i><b></b></div>
+      <span class="learning-particle learning-particle--one"></span><span class="learning-particle learning-particle--two"></span><span class="learning-particle learning-particle--three"></span>
+      <canvas class="subpage-orbit-canvas" aria-hidden="true"></canvas>
+    </div>
+  </div>
   <div class="resource-empty" id="resourceEmpty" hidden>No resources match this filter.</div>
   <section class="section"><div class="resource-tools" id="filters"><button class="filter active" data-filter="all">All resources</button><button class="filter" data-filter="strategy">Strategy</button><button class="filter" data-filter="budget">Budgeting</button><button class="filter" data-filter="content">Content</button><button class="filter" data-filter="metrics">Measurement</button></div>
     <div class="resource-grid" id="resourceGrid">
@@ -145,7 +245,26 @@
 </section>
 
 <section class="page" id="page-consultation" data-view="consultation">
-  <div class="wrap"><div class="page-hero"><div class="eyebrow mono">Let's talk / 05</div><h1 class="display" data-i18n-html="consultation.hero.title">Every startup has<br>a <span class="lime">next question.</span></h1><p>Tell us where you're stuck. The more context you share, the easier it is to understand what kind of support could help.</p></div>
+  <div class="wrap"><div class="page-hero page-hero--consultation">
+    <div class="page-hero-copy"><div class="eyebrow mono">Let's talk / 05</div><h1 class="display" data-i18n-html="consultation.hero.title">Every startup has<br>a <span class="lime">next question.</span></h1><p>Tell us where you're stuck. The more context you share, the easier it is to understand what kind of support could help.</p></div>
+    <div class="page-hero-visual page-visual--conversation" data-orbit-scene="consultation" aria-hidden="true">
+      <svg class="conversation-connectors" viewBox="0 0 420 340" focusable="false">
+        <g class="hero-orbit conversation-orbit-track">
+          <ellipse class="art-orbit art-orbit--slow" cx="210" cy="170" rx="132" ry="55" transform="rotate(-25 210 170)"/>
+          <path class="art-link" d="m210 170 78-70m-78 70-79-37m79 37 40 95"/>
+          <circle class="conversation-node conversation-node--two" cx="288" cy="100" r="5"/>
+          <circle class="conversation-node conversation-node--three" cx="131" cy="133" r="5"/>
+          <circle class="conversation-node conversation-node--four" cx="250" cy="265" r="5"/>
+        </g>
+        <circle class="conversation-node conversation-node--one" cx="210" cy="170" r="8"/>
+      </svg>
+      <div class="conversation-bubble conversation-bubble--one"><i></i><i></i><b></b></div>
+      <div class="conversation-bubble conversation-bubble--two"><i></i><i></i><b></b></div>
+      <div class="conversation-bubble conversation-bubble--three"><i></i><i></i><b></b></div>
+      <span class="conversation-glow"></span>
+      <canvas class="subpage-orbit-canvas" aria-hidden="true"></canvas>
+    </div>
+  </div>
   <section class="section"><div class="consult-layout">
     <div><div class="eyebrow mono">Start a conversation</div><h2 class="display" style="font-size:clamp(35px,4vw,52px);margin:0 0 18px">Let's work out your next move.</h2><p class="muted" style="font-size:13px;line-height:1.9">Whether you are choosing a channel, planning a budget, or trying to understand campaign results, start by sharing the challenge.</p>
       <div class="contact-item"><div class="iconbox">⌖</div><div><strong>Personalized context</strong><span>Share your business stage, audience, and immediate priorities.</span></div></div>
@@ -202,7 +321,50 @@
   </div></section></div>
 </section>
 </main>
-<footer class="footer"><div class="wrap"><div class="footer-top"><div class="footer-brand"><a class="brand" href="#home" data-page="home"><span class="brand-mark">↗</span> GROWISE</a><p>Your Partner in Startup Growth. Helping student founders make smarter marketing decisions, one step at a time.</p></div><div class="footer-links"><div><strong>Explore</strong><a href="#about" data-page="about">About us</a><a href="#services" data-page="services">Services</a><a href="#resources" data-page="resources">Resources</a></div><div><strong>Tools</strong><a href="#planner" data-page="planner">Budget planner</a><a href="#consultation" data-page="consultation">Book a consultation</a></div><div><strong>Our principle</strong><span style="font-size:11px;color:var(--muted)">Clarity over hype.</span><span style="font-size:11px;color:var(--muted)">Learn before scaling.</span></div></div></div><div class="footer-bottom"><span>© 2026 Growise · Student startup growth concept</span><span>Made for ideas in motion ↗</span></div></div></footer>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="brand" href="#home" data-page="home"><span class="brand-mark">↗</span> GROWISE</a>
+        <p data-i18n="footer.description">Your Partner in Startup Growth. Helping student founders make smarter marketing decisions, one step at a time.</p>
+      </div>
+      <section class="footer-huflit" aria-labelledby="footerHuflitName">
+        <div class="footer-huflit-heading">
+          <img class="footer-huflit-logo" src="LOGO-HUFLIT-OFFICIAL.png" alt="HUFLIT">
+          <h2 id="footerHuflitName" data-i18n="footer.universityName">TRƯỜNG ĐẠI HỌC NGOẠI NGỮ - TIN HỌC THÀNH PHỐ HỒ CHÍ MINH (HUFLIT)</h2>
+        </div>
+        <div class="footer-huflit-address">
+          <strong data-i18n="footer.mainCampus">Main campus</strong>
+          <span data-i18n="footer.address.suVanHanh">828 Sư Vạn Hạnh, Phường Hòa Hưng, TP. Hồ Chí Minh.</span>
+        </div>
+      </section>
+      <nav class="footer-links" aria-label="Footer navigation" data-i18n-aria-label="footer.navigationLabel">
+        <div>
+          <strong data-i18n="footer.explore">Explore</strong>
+          <a href="#about" data-page="about" data-i18n="footer.about">About us</a>
+          <a href="#services" data-page="services" data-i18n="footer.services">Services</a>
+          <a href="#resources" data-page="resources" data-i18n="footer.resources">Resources</a>
+        </div>
+        <div>
+          <strong data-i18n="footer.tools">Tools</strong>
+          <a href="#planner" data-page="planner" data-i18n="footer.planner">Budget planner</a>
+          <a href="#consultation" data-page="consultation" data-i18n="footer.consultation">Book a consultation</a>
+        </div>
+        <div>
+          <strong data-i18n="footer.principle">Our principle</strong>
+          <span data-i18n="footer.clarity">Clarity over hype.</span>
+          <span data-i18n="footer.learning">Learn before scaling.</span>
+        </div>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-copy">
+        <span data-i18n="footer.copyright">© 2026 Growise · Student startup growth concept</span>
+      </div>
+      <span class="footer-signature" data-i18n="footer.signature">Made for ideas in motion ↗</span>
+    </div>
+  </div>
+</footer>
 <div class="toast" id="toast" role="status"></div>
 <div class="modal" id="articleModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-box"><div class="modal-head"><div><div class="eyebrow mono">Growise field notes</div><h3 id="modalTitle">Guide title</h3></div><div class="modal-actions"><div class="language-switch modal-language" role="group" aria-label="Language" data-i18n-aria-label="accessibility.languageSwitcher"><button type="button" data-locale="vi" aria-label="Switch language to Vietnamese" data-i18n-aria-label="accessibility.switchToVietnamese">VI</button><button type="button" data-locale="en" aria-label="Switch language to English" data-i18n-aria-label="accessibility.switchToEnglish">EN</button></div><button class="close" id="closeModal" aria-label="Close guide" data-i18n-aria-label="resources.modal.close">×</button></div></div><div id="modalContent"></div><button class="btn btn-primary" id="modalPlanner">Build your plan ↗</button></div></div>
 

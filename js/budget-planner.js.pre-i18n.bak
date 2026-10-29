@@ -1,0 +1,52 @@
+(function(){
+function money(n){return Math.round(n).toLocaleString('vi-VN')+' ₫'}
+const budget=document.getElementById('budget');
+function allocationPercents(){
+ const industry=document.getElementById('industry').value;
+ const goal=document.getElementById('goal').value;
+ let p=[40,25,20,15];
+ if(industry==='food'){p=[35,25,25,15]}
+ if(industry==='service'||industry==='education'){p=[35,15,30,20]}
+ if(industry==='fashion'){p=[40,30,15,15]}
+ if(goal==='awareness')p=[45,25,15,15];
+ if(goal==='leads')p=[30,25,25,20];
+ if(goal==='sales')p=[30,30,20,20];
+ return p;
+}
+function updatePlan(){
+ const b=Number(budget.value), p=allocationPercents();
+ document.getElementById('budgetDisplay').textContent=money(b);
+ document.getElementById('resultBudget').textContent=money(b);
+ const labels=['Content & creative','Paid promotion','Customer research','Testing & reserve'];
+ document.getElementById('allocation').innerHTML=labels.map((label,i)=>`<div class="alloc-row"><span>${label}</span><div class="alloc-track"><div class="alloc-fill" style="width:${p[i]}%"></div></div><span class="alloc-amount">${money(b*p[i]/100)}</span></div>`).join('');
+ const goal=document.getElementById('goal').value, industry=document.getElementById('industry').value, channels=document.getElementById('channels').value;
+ const metrics={awareness:'Reach & saves',engagement:'Engagement',leads:'Qualified leads',sales:'Conversion rate'};
+ document.getElementById('kpiMetric').textContent=metrics[goal];
+ let intro=b<=500000?'Keep the plan lean: focus on customer conversations and organic content before paying to reach more people.':b<=2000000?'Begin with a small, measurable test. Keep enough flexibility to learn and change direction.':'Split the budget into clear experiments. Increase spend only when a channel shows useful evidence.';
+ document.getElementById('resultIntro').textContent=intro;
+ document.getElementById('resultTitle').textContent=b<=500000?'Start lean. Learn fast.':b<=2000000?'A focused start with room to learn.':'Test deliberately, then scale carefully.';
+ let tasks=[];
+ if(channels==='none')tasks.push('Choose one main channel where your target customers already spend time; do not launch everywhere at once.');
+ else if(channels==='social')tasks.push('Keep posting consistently and test two content formats before adding another channel.');
+ else tasks.push('Review which current channel brings meaningful inquiries or sales before splitting spend further.');
+ if(industry==='food')tasks.push('Use clear product photos, menus, customer reviews, and location information to help nearby customers decide.');
+ else if(industry==='fashion')tasks.push('Show the product in use, explain fit or quality, and make the path to purchase easy.');
+ else if(industry==='service')tasks.push('Share proof of your process, answer common questions, and make contacting you simple.');
+ else tasks.push('Create useful content that explains the problem you solve and why your offer is relevant.');
+ tasks.push(goal==='awareness'?'Track reach, saves, profile visits, and brand recall signals—not follower count alone.':goal==='engagement'?'Compare saves, shares, meaningful comments, and profile visits across content formats.':goal==='leads'?'Track qualified inquiries and the cost per inquiry; follow up quickly.':'Track orders, conversion rate, gross margin, and repeat purchases where possible.');
+ tasks.push('Review after 7–14 days, write down what you learned, and avoid scaling a campaign based on one good day.');
+ document.getElementById('priorityList').innerHTML=tasks.map((t,i)=>`<div class="priority"><b>${String(i+1).padStart(2,'0')}</b><span>${t}</span></div>`).join('');
+}
+budget.addEventListener('input',updatePlan);
+['industry','goal','channels'].forEach(id=>document.getElementById(id).addEventListener('change',updatePlan));
+document.getElementById('generatePlan').addEventListener('click',()=>{updatePlan();window.Growise.toast('Your draft plan is updated. Adjust assumptions as you learn.');document.querySelector('.result-panel').scrollIntoView({behavior:'smooth',block:'start'});});
+document.getElementById('copyPlan').addEventListener('click',async()=>{
+ const name=document.getElementById('startupName').value||'My startup';
+ const product=document.getElementById('product').value||'Not specified';
+ const budgetValue=Number(budget.value), p=allocationPercents();
+ const labels=['Content & creative','Paid promotion','Customer research','Testing & reserve'];
+ const summary=`GROWISE — STARTUP MARKETING PLAN\nStartup: ${name}\nOffer: ${product}\nMonthly budget: ${money(budgetValue)}\n\nSuggested allocation:\n${labels.map((l,i)=>`${l}: ${money(budgetValue*p[i]/100)} (${p[i]}%)`).join('\n')}\n\nFirst test: 7–14 days\nPrimary metric: ${document.getElementById('kpiMetric').textContent}\n\nPriorities:\n${[...document.querySelectorAll('#priorityList .priority span')].map((el,i)=>`${i+1}. ${el.textContent}`).join('\n')}\n\nNote: illustrative starting assumptions; validate with real customer and campaign data.`;
+ try{await navigator.clipboard.writeText(summary);window.Growise.toast('Plan summary copied.')}catch(e){const ta=document.createElement('textarea');ta.value=summary;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();window.Growise.toast('Plan summary copied.')}
+});
+updatePlan();
+})();
