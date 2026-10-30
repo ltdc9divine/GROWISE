@@ -82,6 +82,12 @@ begin
         || '.[a-z0-9]+$'''
       )
     and username_check_expression is distinct from
+      (
+        'username=lowerbtrimusernameANDlengthusername>=1ANDlengthusername<=64ANDusername~''^[a-z]+'
+        || chr(92)
+        || '.[a-z0-9]+$|^admin$'''
+      )
+    and username_check_expression is distinct from
       'username=lowerbtrimusernameANDlengthusername>=1ANDlengthusername<=64ANDusername=''admin''ORusername~''^[a-z]+-[a-z0-9]+$''' then
     raise exception
       'Expected username constraint to match exactly the known legacy or canonical schema; found: %',
@@ -167,32 +173,6 @@ begin
 end;
 $preflight$;
 
-create temporary table growise_username_migration_map
-on commit drop
-as
-select
-  id,
-  username as old_username,
-  replace(username, '.', '-') as new_username
-from public.growise_profiles
-where username ~ '^[a-z]+\.[a-z0-9]+$';
-
-do $temporary_name_check$
-begin
-  if exists (
-    select 1
-    from growise_username_migration_map as mapping
-    join public.growise_profiles as profile
-      on lower(profile.username) =
-        lower('legacy-' || replace(mapping.id::text, '-', ''))
-      and profile.id <> mapping.id
-  ) then
-    raise exception
-      'Migration stopped: an internal temporary username would collide';
-  end if;
-end;
-$temporary_name_check$;
-
 create table growise_private.username_migration_20261031 (
   user_id uuid primary key,
   old_username text not null unique,
@@ -213,31 +193,51 @@ insert into growise_private.username_migration_20261031 (
   old_username,
   new_username
 )
-select id, old_username, new_username
-from growise_username_migration_map;
+select
+  id,
+  username,
+  replace(username, '.', '-')
+from public.growise_profiles
+where username ~ '^[a-z]+\.[a-z0-9]+$';
+
+do $temporary_name_check$
+begin
+  if exists (
+    select 1
+    from growise_private.username_migration_20261031 as mapping
+    join public.growise_profiles as profile
+      on lower(profile.username) =
+        lower('legacy-' || replace(mapping.user_id::text, '-', ''))
+      and profile.id <> mapping.user_id
+  ) then
+    raise exception
+      'Migration stopped: an internal temporary username would collide';
+  end if;
+end;
+$temporary_name_check$;
 
 alter table public.growise_profiles
   drop constraint growise_profiles_username_check;
 
 update public.growise_profiles as profile
 set username = 'legacy-' || replace(profile.id::text, '-', '')
-from growise_username_migration_map as mapping
-where profile.id = mapping.id;
+from growise_private.username_migration_20261031 as mapping
+where profile.id = mapping.user_id;
 
 update public.growise_profiles as profile
 set username = mapping.new_username
-from growise_username_migration_map as mapping
-where profile.id = mapping.id;
+from growise_private.username_migration_20261031 as mapping
+where profile.id = mapping.user_id;
 
 update auth.users as auth_user
 set raw_user_meta_data =
   coalesce(auth_user.raw_user_meta_data, '{}'::jsonb)
   || jsonb_build_object('username', mapping.new_username)
-from growise_username_migration_map as mapping
-where auth_user.id = mapping.id;
+from growise_private.username_migration_20261031 as mapping
+where auth_user.id = mapping.user_id;
 
 alter table public.growise_profiles
-  add constraint growise_profiles_username_format_check
+  add constraint growise_profiles_username_check
   check (
     username = lower(btrim(username))
     and length(username) between 1 and 64
