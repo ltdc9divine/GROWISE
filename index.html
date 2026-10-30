@@ -11,6 +11,10 @@
 <link rel="stylesheet" href="css/style.css">
 
 <script src="js/translations.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/supabase-config.js" defer></script>
+<script src="js/username.js" defer></script>
+<script src="js/supabase-auth.js" defer></script>
 <script src="js/main.js" defer></script>
 <script src="js/subpage-orbits.js" defer></script>
 <script src="js/particle-orb.js" defer></script>
@@ -20,13 +24,14 @@
 <header class="nav">
   <div class="nav-inner">
     <div class="brand-group">
-      <img class="institution-logo" src="LOGO-HUFLIT-OFFICIAL.png" alt="Logo Trường Đại học Ngoại ngữ - Tin học TP. Hồ Chí Minh">
+      <img class="institution-logo" src="LOGO-HUFLIT-OFFICIAL.png" alt="HUFLIT logo" data-i18n-alt="accessibility.huflitLogo">
       <span class="brand-divider" aria-hidden="true"></span>
       <a class="brand" href="#home" data-page="home" aria-label="Growise home" data-i18n-aria-label="accessibility.home"><span class="brand-mark">↗</span> GROWISE</a>
     </div>
     <button class="menu-btn" id="menuBtn" aria-label="Open navigation" data-i18n-aria-label="accessibility.openNavigation">☰</button>
     <nav class="navlinks" id="navlinks">
-      <a href="#home" data-page="home" class="active">Home</a><a href="#about" data-page="about">About Us</a><a href="#services" data-page="services">Services</a><a href="#planner" data-page="planner">Budget Planner</a><a href="#resources" data-page="resources">Resources</a><a href="#consultation" data-page="consultation">Consultation</a>
+      <a href="#home" data-page="home" class="active">Home</a><a href="#about" data-page="about">About Us</a><a href="#services" data-page="services">Services</a><a href="#planner" data-page="planner">Budget Planner</a><a href="#resources" data-page="resources">Resources</a><a href="#consultation" data-page="consultation">Consultation</a><a href="#feedback" data-page="feedback" data-i18n="nav.feedback">Feedback</a>
+      <button class="nav-auth-button" id="authOpen" type="button" data-i18n="auth.nav.signIn">Sign in</button>
       <a class="btn btn-primary nav-cta" href="#planner" data-page="planner">Plan your growth <span class="arrow">↗</span></a>
     </nav>
     <div class="language-switch" role="group" aria-label="Language" data-i18n-aria-label="accessibility.languageSwitcher">
@@ -57,7 +62,7 @@
   </div>
   <section class="section">
     <div class="wrap">
-      <div class="section-head reveal"><div><div class="eyebrow mono">The challenge</div><h2 class="display" data-i18n-html="home.challenge.title">Big ambition.<br><span class="lime">Limited resources.</span></h2></div><p>Starting a business is hard enough. Marketing shouldn't feel like guesswork. Growise turns confusing choices into a clearer next step.</p></div>
+      <div class="section-head reveal"><div><div class="eyebrow mono">The challenge</div><h2 class="display" data-i18n-html="home.challenge.title">Big ambition.<br><span class="lime">Limited resources.</span></h2></div><p>Student founders may have limited marketing experience, struggle to identify customers and suitable channels, manage small budgets, measure campaign results, or afford professional advice. Growise offers accessible guidance, planning tools, and resources to help explore a thoughtful next step.</p></div>
       <div class="grid3">
         <article class="card reveal"><span class="card-num">01 / CLARITY</span><div class="iconbox">⌖</div><h3>Finding your people</h3><p>Understand who your customers are and where they are most likely to discover your brand.</p></article>
         <article class="card reveal"><span class="card-num">02 / FOCUS</span><div class="iconbox">◉</div><h3>Choosing the right channels</h3><p>Focus your time and money on channels that fit your product, audience, and current stage.</p></article>
@@ -92,6 +97,7 @@
   <section class="section"><div class="about-story reveal"><div><div class="eyebrow mono">Our story</div><h2 class="display" data-i18n-html="about.story.title">Good ideas need more than <span class="lime">good timing.</span></h2></div><div><p>Early-stage founders may need to decide whom to serve, which channel to try, how to plan a limited budget, and what to measure. These are the practical questions this project is designed to help users explore; they are not presented as proven research findings.</p><p>The research topic is “Exploring Factors Affecting Start-up Success among HUFLIT Seniors: Developing a Marketing Support Website for Student Start-ups.” Growise is the website prototype developed for that project.</p><p><strong style="color:var(--text)">This prototype offers educational guidance and planning tools. It is not a professional marketing agency, does not verify market assumptions, and cannot guarantee business or campaign results.</strong></p></div></div>
   <div class="values reveal"><div class="value"><strong>Our mission</strong><p>Make useful marketing knowledge and practical planning more accessible to student founders.</p></div><div class="value"><strong>Our vision</strong><p>Become a trusted starting point for students building thoughtful, sustainable ventures.</p></div><div class="value"><strong>Our principles</strong><p>Clarity over hype. Evidence over assumptions. Learning before scaling.</p></div></div></section>
   <section class="section" style="padding-top:0"><div class="section-head"><div><div class="eyebrow mono">Who we serve</div><h2 class="display" data-i18n-html="about.audience.title">Made for the <span class="lime">first steps.</span></h2></div><p>Our intended audience is senior HUFLIT students exploring entrepreneurship and early-stage student businesses.</p></div><div class="grid3"><article class="card"><div class="iconbox">✳</div><h3>Idea-stage founders</h3><p>Students who need to validate a business idea and learn who might buy it.</p></article><article class="card"><div class="iconbox">↗</div><h3>Early-stage startups</h3><p>Small teams beginning to promote a product and looking for a repeatable approach.</p></article><article class="card"><div class="iconbox">◎</div><h3>Student-led businesses</h3><p>Founders who want to understand results and make limited marketing funds go further.</p></article></div></section>
+  <section class="section" style="padding-top:0"><div class="section-head"><div><div class="eyebrow mono" data-i18n="about.team.eyebrow">Our team</div><h2 class="display" data-i18n="about.team.title">A student research project.</h2></div><p data-i18n="about.team.description">GROWISE is developed as an academic project for student startup marketing support.</p></div><article class="card team-transparency"><div class="mono" data-i18n="about.team.noteTitle">Team information</div><p data-i18n="about.team.note">Verified team member names and individual responsibilities were not provided for this prototype. Add the confirmed project team and roles here before final submission.</p></article></section>
   <section class="section" style="padding-top:0"><div class="cta-band"><div><h2>Small teams can make thoughtful moves.</h2><p>Explore the tools and services built around your current stage.</p></div><a class="btn btn-dark" href="#services" data-page="services">Explore services ↗</a></div></section></div>
 </section>
 
@@ -106,10 +112,10 @@
     </div>
   </div>
   <section class="section"><div class="service-list">
-    <article class="service-row"><div class="service-number">01 /</div><h3>Marketing Strategy Consultation</h3><p>If you are unsure whom to reach or which channel might fit, a future consultation could review the audience, goals, and constraints you provide. Intended output: a discussion outline with questions to investigate. Scope: this prototype does not provide professional market research; assumptions still need validation.</p><a href="#consultation" data-page="consultation" class="circle-arrow" aria-label="Discuss strategy support" data-i18n-aria-label="services.cta.strategy">↗</a></article>
-    <article class="service-row"><div class="service-number">02 /</div><h3>Marketing Plan Development</h3><p>If marketing tasks feel scattered, the proposed planning support could organize a stated goal into draft priorities, timing, content prompts, and review points. Intended output: an outline to adapt. Scope: this prototype does not run campaigns; any plan would depend on the information provided.</p><a href="#consultation" data-page="consultation" class="circle-arrow" aria-label="Discuss marketing planning" data-i18n-aria-label="services.cta.plan">↗</a></article>
-    <article class="service-row"><div class="service-number">03 /</div><h3>Budget Optimization</h3><p>The planner generates an illustrative allocation from fixed rules to help you consider spending categories and small tests. Intended output: a draft allocation to review. Scope: it is not tailored financial advice or a guarantee; check your actual costs and margins before spending.</p><a href="#planner" data-page="planner" class="circle-arrow" aria-label="Open the budget planner" data-i18n-aria-label="services.cta.budget">↗</a></article>
-    <article class="service-row"><div class="service-number">04 /</div><h3>Campaign Performance Review</h3><p>If campaign results are hard to interpret, a future review could examine data you provide—such as reach, inquiries, or sales—and outline a possible next test. Intended output: observations and a question to investigate. Scope: no data integrations; conclusions depend on the data and do not prove causation or predict performance.</p><a href="#consultation" data-page="consultation" class="circle-arrow" aria-label="Discuss a campaign review" data-i18n-aria-label="services.cta.review">↗</a></article>
+    <article class="service-row"><div class="service-number">01 /</div><h3>Marketing Strategy Consultation</h3><p>If you are unsure whom to reach or which channel might fit, a future consultation could review the audience, goals, and constraints you provide. Intended output: a discussion outline with questions to investigate. Scope: this prototype does not provide professional market research; assumptions still need validation.<span class="service-benefit"><strong data-i18n="services.benefit.label">Potential benefit:</strong> <span data-i18n="services.benefit.strategy">Clarify a possible audience, compare channel fit, and identify questions to validate before committing resources.</span></span></p><a href="#consultation" data-page="consultation" class="circle-arrow" aria-label="Discuss strategy support" data-i18n-aria-label="services.cta.strategy">↗</a></article>
+    <article class="service-row"><div class="service-number">02 /</div><h3>Marketing Plan Development</h3><p>If marketing tasks feel scattered, the proposed planning support could organize a stated goal into draft priorities, timing, content prompts, and review points. Intended output: an outline to adapt. Scope: this prototype does not run campaigns; any plan would depend on the information provided.<span class="service-benefit"><strong data-i18n="services.benefit.label">Potential benefit:</strong> <span data-i18n="services.benefit.plan">Turn a broad goal into an adaptable sequence of priorities and checkpoints.</span></span></p><a href="#consultation" data-page="consultation" class="circle-arrow" aria-label="Discuss marketing planning" data-i18n-aria-label="services.cta.plan">↗</a></article>
+    <article class="service-row"><div class="service-number">03 /</div><h3>Budget Optimization</h3><p>The planner generates an illustrative allocation from fixed rules to help you consider spending categories and small tests. Intended output: a draft allocation to review. Scope: it is not tailored financial advice or a guarantee; check your actual costs and margins before spending.<span class="service-benefit"><strong data-i18n="services.benefit.label">Potential benefit:</strong> <span data-i18n="services.benefit.budget">Make spending trade-offs visible and reserve room for learning from small tests.</span></span></p><a href="#planner" data-page="planner" class="circle-arrow" aria-label="Open the budget planner" data-i18n-aria-label="services.cta.budget">↗</a></article>
+    <article class="service-row"><div class="service-number">04 /</div><h3>Campaign Performance Review</h3><p>If campaign results are hard to interpret, a future review could examine data you provide—such as reach, inquiries, or sales—and outline a possible next test. Intended output: observations and a question to investigate. Scope: no data integrations; conclusions depend on the data and do not prove causation or predict performance.<span class="service-benefit"><strong data-i18n="services.benefit.label">Potential benefit:</strong> <span data-i18n="services.benefit.review">Identify patterns in available campaign metrics and choose a next question to investigate.</span></span></p><a href="#consultation" data-page="consultation" class="circle-arrow" aria-label="Discuss a campaign review" data-i18n-aria-label="services.cta.review">↗</a></article>
   </div></section>
   <section class="section" style="padding-top:0"><div class="section-head"><div><div class="eyebrow mono">How it works</div><h2 class="display" data-i18n-html="services.process.title">A clear path from idea to <span class="lime">action.</span></h2></div></div><div class="grid3"><article class="card"><span class="card-num">STEP 01</span><h3>Understand</h3><p>Describe your product, audience, current challenges, and constraints.</p></article><article class="card"><span class="card-num">STEP 02</span><h3>Prioritize</h3><p>Choose the most important marketing question to address first.</p></article><article class="card"><span class="card-num">STEP 03</span><h3>Learn & adjust</h3><p>Run manageable experiments and use results to decide what comes next.</p></article></div></section>
   <section class="section" style="padding-top:0"><div class="cta-band"><div><h2>Not sure what you need yet?</h2><p>Start with the budget planner. It gives you a structured first draft, not a one-size-fits-all answer.</p></div><a class="btn btn-dark" href="#planner" data-page="planner">Open budget planner ↗</a></div></section></div>
@@ -194,7 +200,7 @@
       <div class="contact-item"><div class="iconbox">↗</div><div><strong>Practical next steps</strong><span>Focus on useful actions that fit your current resources.</span></div></div>
       <p class="notice">Demo note: this prototype validates the form in your browser but does not send submissions to a server or book an actual appointment.</p>
     </div>
-    <div class="form-step" id="consultationStep">
+    <div>
     <form class="form-panel" id="consultForm" novalidate><h2 class="panel-title">Book a consultation</h2><p class="panel-sub">Fields marked * are required.</p>
       <div class="field-grid">
         <div class="field"><label for="fullName">Full name *</label><input id="fullName" required placeholder="Your name" data-i18n-placeholder="consultation.placeholder.fullName"></div>
@@ -208,11 +214,44 @@
         <div class="field full"><label for="challenge">Current marketing challenges *</label><textarea id="challenge" required placeholder="What are you trying to solve? e.g. choosing channels, low engagement, limited budget..." data-i18n-placeholder="consultation.placeholder.challenge"></textarea></div>
       </div>
       <button class="btn btn-primary" type="submit" style="width:100%">Submit consultation request ↗</button>
-      <div class="success-message" id="successMessage" role="status">Your demo request has been validated in this browser. No message has been sent yet. Connect a backend or form service to receive real submissions.</div>
+      <div class="success-message" id="successMessage" role="status" data-i18n="consultation.demo.success">Your demo request has been validated in this browser. No message has been sent yet. Connect a backend or form service to receive real submissions.</div>
     </form>
     </div>
-    <div class="form-step feedback-step" id="feedbackStep" hidden>
-      <form class="form-panel" id="feedbackForm" novalidate>
+  </div></section></div>
+</section>
+<section class="page" id="page-feedback" data-view="feedback">
+  <div class="wrap">
+    <section class="feedback-hero" aria-labelledby="feedbackHeroTitle">
+      <div class="feedback-hero-copy">
+        <p class="eyebrow mono feedback-hero-eyebrow" data-i18n="feedback.hero.eyebrow">FEEDBACK / 06</p>
+        <h1 id="feedbackHeroTitle" data-i18n-html="feedback.hero.title">Listen to <span>grow better.</span></h1>
+        <p class="feedback-hero-intro" data-i18n="feedback.hero.description">Every perspective matters. Share your experience to help Growise become more useful for student founders.</p>
+        <div class="feedback-hero-actions">
+          <a class="feedback-hero-button feedback-hero-button-primary" href="#feedback-form" data-feedback-scroll><span data-i18n="feedback.hero.cta">Send feedback</span><span aria-hidden="true">↗</span></a>
+          <a class="feedback-hero-button" href="#consultation" data-page="consultation" data-i18n="feedback.back">Back to consultation</a>
+        </div>
+        <p class="feedback-hero-note" data-i18n="feedback.hero.note">Your voice helps us grow.</p>
+      </div>
+      <div class="feedback-hero-visual" role="img" aria-label="Three-dimensional speech bubble illustration with orbiting lime dots" data-i18n-aria-label="accessibility.feedbackHero">
+        <span class="feedback-hero-ring feedback-hero-ring-one" aria-hidden="true"></span>
+        <span class="feedback-hero-ring feedback-hero-ring-two" aria-hidden="true"></span>
+        <span class="feedback-hero-ring feedback-hero-ring-three" aria-hidden="true"></span>
+        <div class="feedback-hero-bubble-wrap" aria-hidden="true">
+          <span class="feedback-hero-bubble-shadow"></span>
+          <span class="feedback-hero-bubble"><span class="feedback-hero-quote">“</span></span>
+        </div>
+        <span class="feedback-hero-glint feedback-hero-glint-one" aria-hidden="true"></span>
+        <span class="feedback-hero-glint feedback-hero-glint-two" aria-hidden="true"></span>
+        <span class="feedback-hero-glint feedback-hero-glint-three" aria-hidden="true"></span>
+        <span class="feedback-hero-spark feedback-hero-spark-one" aria-hidden="true"></span>
+        <span class="feedback-hero-spark feedback-hero-spark-two" aria-hidden="true"></span>
+        <span class="feedback-hero-spark feedback-hero-spark-three" aria-hidden="true"></span>
+      </div>
+    </section>
+    <section class="section feedback-section" aria-labelledby="feedbackTitle">
+      <div class="feedback-layout" id="feedback-form">
+        <div class="feedback-form-section">
+          <form class="form-panel" id="feedbackForm" novalidate>
         <h2 class="panel-title" id="feedbackTitle" tabindex="-1" data-i18n="feedback.title">Feedback</h2>
         <p class="panel-sub" data-i18n="feedback.description">Your feedback helps Growise improve and better support student founders.</p>
         <p class="notice feedback-demo-note" data-i18n="feedback.demoNote">Demo only: feedback is not sent to or saved on a server.</p>
@@ -236,11 +275,13 @@
           <div class="field full"><label for="feedbackFeatures" data-i18n="feedback.fields.features">What features would you like the website to add?</label><textarea id="feedbackFeatures" data-i18n-placeholder="feedback.placeholder.features" placeholder="Describe features that would help you."></textarea></div>
         </div>
         <div class="feedback-error" id="feedbackError" role="alert" hidden><p data-i18n="feedback.validation.missing">Please rate each of the following before submitting:</p><ul id="feedbackMissingList"></ul></div>
-        <div class="feedback-actions"><button class="btn btn-ghost" type="button" id="backToConsultation" data-i18n="feedback.back">Back to consultation</button><button class="btn btn-primary" type="submit" data-i18n="feedback.submit">SEND FEEDBACK</button></div>
-      </form>
-      <div class="form-panel feedback-complete" id="feedbackComplete" role="status" hidden><h2 class="panel-title" data-i18n="feedback.thanks.title">Thank you for your feedback!</h2><p data-i18n="feedback.thanks.message">Your feedback helps us improve Growise and better support student founders.</p></div>
-    </div>
-  </div></section></div>
+        <div class="feedback-actions"><a class="btn btn-ghost" href="#consultation" id="backToConsultation" data-page="consultation" data-i18n="feedback.back">Back to consultation</a><button class="btn btn-primary" type="submit" data-i18n="feedback.submit">SEND FEEDBACK</button></div>
+          </form>
+          <div class="form-panel feedback-complete" id="feedbackComplete" role="status" hidden><h2 class="panel-title" data-i18n="feedback.thanks.title">Thank you for your feedback!</h2><p data-i18n="feedback.thanks.message">Your feedback helps us improve Growise and better support student founders.</p></div>
+        </div>
+      </div>
+    </section>
+  </div>
 </section>
 </main>
 <footer class="footer">
@@ -288,6 +329,83 @@
   </div>
 </footer>
 <div class="toast" id="toast" role="status"></div>
+<div class="modal auth-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="modal-box auth-modal-box">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow mono" data-i18n="auth.eyebrow">GROWISE ACCOUNT</div>
+        <h2 id="authTitle" tabindex="-1" data-i18n="auth.title">Student account</h2>
+      </div>
+      <div class="modal-actions">
+        <div class="language-switch modal-language auth-language" role="group" aria-label="Language" data-i18n-aria-label="accessibility.languageSwitcher">
+          <button type="button" data-locale="vi" aria-label="Switch language to Vietnamese" data-i18n-aria-label="accessibility.switchToVietnamese">VI</button>
+          <button type="button" data-locale="en" aria-label="Switch language to English" data-i18n-aria-label="accessibility.switchToEnglish">EN</button>
+        </div>
+        <button class="close" id="authClose" type="button" aria-label="Close account dialog" data-i18n-aria-label="auth.close">×</button>
+      </div>
+    </div>
+    <p class="auth-status" id="authStatus" role="status" aria-live="polite" hidden></p>
+    <section id="authLoginView">
+      <h3 data-i18n="auth.login.heading">Sign in</h3>
+      <form id="authLoginForm" class="auth-form">
+        <div class="field"><label for="authLoginUsername" data-i18n="auth.username">Username</label><input id="authLoginUsername" name="username" autocomplete="username" maxlength="128" required data-i18n-placeholder="auth.username.placeholder" placeholder="dat-231283h1"></div>
+        <div class="field"><label for="authLoginPassword" data-i18n="auth.password">Password</label><input id="authLoginPassword" name="password" type="password" autocomplete="current-password" required></div>
+        <button class="btn btn-primary" type="submit" data-i18n="auth.login.submit">Sign in</button>
+      </form>
+      <div class="auth-links">
+        <button type="button" data-auth-view="forgot" data-i18n="auth.login.forgot">Forgot password?</button>
+        <button type="button" data-auth-view="register" data-i18n="auth.login.register">Create a student account</button>
+      </div>
+    </section>
+    <section id="authRegisterView" hidden>
+      <h3 data-i18n="auth.register.heading">Create a student account</h3>
+      <form id="authRegisterForm" class="auth-form">
+        <div class="field"><label for="authRegisterUsername" data-i18n="auth.register.username">Account</label><input id="authRegisterUsername" name="username" autocomplete="username" maxlength="64" required data-i18n-placeholder="auth.username.placeholder" placeholder="dat-231283h1"></div>
+        <div class="field"><label for="authRegisterEmail" data-i18n="auth.register.email">Confirmation email</label><input id="authRegisterEmail" name="email" type="email" autocomplete="email" required></div>
+        <div class="field"><label for="authRegisterPassword" data-i18n="auth.password">Password</label><input id="authRegisterPassword" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
+        <button class="btn btn-primary" type="submit" data-i18n="auth.register.submit">Register</button>
+      </form>
+      <div class="auth-links"><button type="button" data-auth-view="login" data-i18n="auth.register.back">Back to sign in</button></div>
+    </section>
+    <section id="authForgotView" hidden>
+      <h3 data-i18n="auth.forgot.heading">Reset your password</h3>
+      <form id="authForgotForm" class="auth-form">
+        <div class="field"><label for="authForgotEmail" data-i18n="auth.email">Email</label><input id="authForgotEmail" name="email" type="email" autocomplete="email" required></div>
+        <button class="btn btn-primary" type="submit" data-i18n="auth.forgot.submit">Send recovery link</button>
+      </form>
+      <div class="auth-links"><button type="button" data-auth-view="login" data-i18n="auth.register.back">Back to sign in</button></div>
+    </section>
+    <section id="authResetView" hidden>
+      <h3 data-i18n="auth.reset.heading">Choose a new password</h3>
+      <form id="authResetForm" class="auth-form">
+        <div class="field"><label for="authNewPassword" data-i18n="auth.newPassword">New password</label><input id="authNewPassword" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
+        <button class="btn btn-primary" type="submit" data-i18n="auth.reset.submit">Update password</button>
+      </form>
+    </section>
+    <section id="authAccountView" hidden>
+      <h3 data-i18n="auth.account.heading">Your account</h3>
+      <dl class="auth-account-details">
+        <div><dt data-i18n="auth.email">Email</dt><dd id="authAccountEmail"></dd></div>
+        <div><dt data-i18n="auth.username">Username</dt><dd id="authAccountUsername"></dd></div>
+        <div><dt data-i18n="auth.studentStatus">Student status</dt><dd id="authAccountStatus"></dd></div>
+      </dl>
+      <form id="authEmailForm" class="auth-form auth-account-form">
+        <div class="field"><label for="authNewEmail" data-i18n="auth.email.new">Change email</label><input id="authNewEmail" name="email" type="email" autocomplete="email" required></div>
+        <button class="btn btn-ghost" type="submit" data-i18n="auth.email.update">Update email</button>
+      </form>
+      <form id="authChangePasswordForm" class="auth-form auth-account-form">
+        <div class="field"><label for="authAccountNewPassword" data-i18n="auth.newPassword">New password</label><input id="authAccountNewPassword" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
+        <button class="btn btn-ghost" type="submit" data-i18n="auth.password.update">Change password</button>
+      </form>
+      <section id="authAdminPanel" class="auth-admin-panel" hidden>
+        <h3 data-i18n="auth.admin.heading">Student verification</h3>
+        <p data-i18n="auth.admin.description">Review pending student accounts before granting verified student access.</p>
+        <div id="authAdminStudents" class="auth-admin-students"></div>
+      </section>
+      <button class="btn btn-ghost auth-logout" id="authLogout" type="button" data-i18n="auth.logout">Sign out</button>
+    </section>
+  </div>
+</div>
 <div class="modal" id="articleModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-box"><div class="modal-head"><div><div class="eyebrow mono">Growise field notes</div><h3 id="modalTitle">Guide title</h3></div><div class="modal-actions"><div class="language-switch modal-language" role="group" aria-label="Language" data-i18n-aria-label="accessibility.languageSwitcher"><button type="button" data-locale="vi" aria-label="Switch language to Vietnamese" data-i18n-aria-label="accessibility.switchToVietnamese">VI</button><button type="button" data-locale="en" aria-label="Switch language to English" data-i18n-aria-label="accessibility.switchToEnglish">EN</button></div><button class="close" id="closeModal" aria-label="Close guide" data-i18n-aria-label="resources.modal.close">×</button></div></div><div id="modalContent"></div><button class="btn btn-primary" id="modalPlanner">Build your plan ↗</button></div></div>
 
 </body>

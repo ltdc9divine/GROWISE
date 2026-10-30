@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GROWISE — Minimal Feedback Hero</title>
+<style>
+:root{
+  --lime:#B9FF4A;
+  --lime-soft:#DFFFAD;
+  --lime-deep:#567D25;
+  --ink:#181916;
+  --muted:#62665D;
+  --paper:#FFFFFF;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:#fff;color:var(--ink);
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.hero{
+  width:min(1240px,calc(100% - 64px));
+  min-height:610px;margin:0 auto;padding:66px 0 50px;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(420px,1fr);
+  align-items:center;gap:clamp(28px,5vw,76px);
+  overflow:hidden;
+}
+.copy{max-width:570px;position:relative;z-index:2}
+.eyebrow{
+  display:flex;align-items:center;gap:11px;margin:0 0 23px;
+  color:var(--lime-deep);font:600 11px/1.4 "DM Mono",Consolas,monospace;
+  letter-spacing:.14em;text-transform:uppercase;
+}
+.eyebrow:before{content:"";width:24px;height:2px;background:var(--lime)}
+h1{
+  max-width:590px;margin:0;font-size:clamp(48px,5.2vw,72px);
+  line-height:1;letter-spacing:-.065em;font-weight:650;text-wrap:balance;
+}
+h1 span{color:var(--lime-deep)}
+.intro{
+  max-width:470px;margin:23px 0 0;color:var(--muted);
+  font-size:15px;line-height:1.8;
+}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:27px}
+.btn{
+  min-height:48px;padding:0 20px;display:inline-flex;align-items:center;
+  justify-content:center;gap:10px;border:1px solid #E6E9E1;border-radius:999px;
+  background:#fff;color:var(--ink);text-decoration:none;font-size:13px;font-weight:700;
+  transition:transform .2s,box-shadow .2s;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 9px 22px #17200c12}
+.btn.primary{background:var(--lime);border-color:var(--lime)}
+.note{display:flex;align-items:center;gap:10px;margin-top:21px;color:#74796E;font-size:11px}
+.note:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 5px #B9FF4A30}
+
+.visual{
+  min-height:470px;position:relative;display:grid;place-items:center;
+  perspective:1100px;isolation:isolate;
+}
+.visual:before{
+  content:"";position:absolute;width:76%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,#F1FFD9 0%,#FAFFF4 42%,transparent 72%);
+  z-index:-2;
+}
+.ring{
+  position:absolute;width:82%;height:48%;border:1px solid #DDEBCB;
+  border-radius:50%;transform-style:preserve-3d;
+  animation:ringA 19s linear infinite;
+}
+.ring.r2{
+  width:62%;height:88%;border-color:#E7F0DA;
+  animation:ringB 24s linear infinite;
+}
+.ring.r3{
+  width:95%;height:28%;border-style:dashed;border-color:#EAF1E1;
+  animation:ringC 29s linear infinite;
+}
+.bubble-wrap{
+  width:310px;height:260px;position:relative;display:grid;place-items:center;
+  transform-style:preserve-3d;animation:bubbleFloat 7s ease-in-out infinite;
+}
+.bubble-shadow{
+  position:absolute;width:260px;height:210px;border-radius:48% 48% 44% 44%;
+  background:var(--lime);transform:translate3d(13px,17px,-28px) rotate(-7deg);
+  filter:drop-shadow(0 24px 22px #789A4930);
+}
+.bubble{
+  position:relative;width:255px;height:205px;border-radius:48% 48% 44% 44%;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#FFFFFF 8%,#FBFFF5 58%,#F0F8E5 100%);
+  border:1px solid #E3EDD7;
+  box-shadow:inset -12px -14px 24px #DCEBCB70,inset 9px 8px 20px #FFFFFF,
+             0 25px 55px #34471F18;
+  transform:rotateY(-16deg) rotateX(9deg) rotateZ(-7deg);
+  transform-style:preserve-3d;
+}
+.bubble:after{
+  content:"";position:absolute;left:39px;bottom:-28px;width:62px;height:56px;
+  background:linear-gradient(145deg,#F9FFF1,#EAF5DC);
+  clip-path:polygon(0 0,100% 0,18% 100%);
+  border-left:1px solid #E3EDD7;transform:translateZ(-1px);
+}
+.quote{
+  position:relative;z-index:2;color:var(--lime-deep);
+  font-family:Georgia,serif;font-size:150px;font-weight:700;
+  line-height:.8;letter-spacing:-.12em;transform:translate(-5px,-4px) translateZ(28px);
+  text-shadow:0 5px 0 #B9FF4A40;
+  user-select:none;
+}
+.glint{
+  position:absolute;width:45px;height:45px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff 0 8%,#E8FFC9 22%,#B9FF4A 58%,#88BC3D 100%);
+  box-shadow:0 12px 24px #7FAE4238,inset -4px -5px 8px #618B2C33;
+  transform-style:preserve-3d;animation:glintFloat 5s ease-in-out infinite;
+}
+.glint.g1{top:13%;right:17%;width:25px;height:25px;animation-delay:-1s}
+.glint.g2{bottom:15%;left:13%;width:15px;height:15px;animation-delay:-2.4s}
+.glint.g3{top:28%;left:10%;width:10px;height:10px;animation-delay:-3.2s}
+.spark{
+  position:absolute;width:5px;height:5px;border-radius:50%;background:var(--lime);
+  box-shadow:0 0 13px #B9FF4A;animation:twinkle 3.4s ease-in-out infinite;
+}
+.spark.s1{top:20%;left:27%}.spark.s2{right:12%;bottom:25%;animation-delay:-1.2s}
+.spark.s3{right:29%;top:10%;width:3px;height:3px;animation-delay:-2s}
+@keyframes bubbleFloat{
+  0%,100%{transform:rotateX(-5deg) rotateY(-8deg) rotateZ(-2deg) translateY(0)}
+  25%{transform:rotateX(8deg) rotateY(12deg) rotateZ(3deg) translateY(-9px)}
+  50%{transform:rotateX(-9deg) rotateY(5deg) rotateZ(-4deg) translateY(-2px)}
+  75%{transform:rotateX(5deg) rotateY(-14deg) rotateZ(2deg) translateY(-12px)}
+}
+@keyframes ringA{from{transform:rotateX(64deg) rotateZ(0)}to{transform:rotateX(64deg) rotateZ(360deg)}}
+@keyframes ringB{from{transform:rotateY(68deg) rotateZ(0)}to{transform:rotateY(68deg) rotateZ(-360deg)}}
+@keyframes ringC{from{transform:rotateX(76deg) rotateY(18deg) rotateZ(0)}to{transform:rotateX(76deg) rotateY(18deg) rotateZ(360deg)}}
+@keyframes glintFloat{0%,100%{transform:translate3d(0,0,15px)}50%{transform:translate3d(0,-13px,35px)}}
+@keyframes twinkle{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1.35)}}
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;gap:0;padding-top:52px}
+  .copy{max-width:700px}
+  .visual{min-height:420px}
+}
+@media(max-width:600px){
+  .hero{width:calc(100% - 36px);padding:40px 0 24px}
+  h1{font-size:clamp(40px,10.2vw,50px);line-height:1.04}
+  .intro{font-size:14px;margin-top:17px}
+  .actions{margin-top:21px}
+  .visual{min-height:330px;margin-top:5px}
+  .bubble-wrap{transform:scale(.82);animation:bubbleFloat 7s ease-in-out infinite}
+  .ring.r1{width:90%}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<section class="hero" aria-labelledby="feedback-title">
+  <div class="copy">
+    <div class="eyebrow">Feedback / 07</div>
+    <h1 id="feedback-title">Lắng nghe để <span>tốt hơn.</span></h1>
+    <p class="intro">Mỗi góc nhìn đều đáng trân trọng. Chia sẻ cảm nhận của bạn để Growise ngày càng hữu ích hơn với sinh viên khởi nghiệp.</p>
+    <div class="actions">
+      <a class="btn primary" href="#feedback-form">Gửi phản hồi <span aria-hidden="true">↗</span></a>
+      <a class="btn" href="#consultation">Quay lại tư vấn</a>
+    </div>
+    <div class="note">Your voice helps us grow.</div>
+  </div>
+  <div class="visual" aria-label="Biểu tượng bong bóng hội thoại ba chiều">
+    <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+    <div class="bubble-wrap">
+      <div class="bubble-shadow"></div>
+      <div class="bubble"><span class="quote">“</span></div>
+    </div>
+    <span class="glint g1"></span><span class="glint g2"></span><span class="glint g3"></span>
+    <span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span>
+  </div>
+</section>
+</body>
+</html>

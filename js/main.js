@@ -1,6 +1,6 @@
 (function(){
 
-const pageNames=['home','about','services','planner','resources','consultation'];
+const pageNames=['home','about','services','planner','resources','consultation','feedback'];
 const navlinks=document.getElementById('navlinks');
 const i18n=window.Growise.i18n;
 function updateMenuLabel(){document.getElementById('menuBtn').setAttribute('aria-label',i18n.t(navlinks.classList.contains('open')?'accessibility.closeNavigation':'accessibility.openNavigation'))}
@@ -72,11 +72,16 @@ document.addEventListener('growise:localechange',()=>{
  updateMenuLabel();
  if(modal.classList.contains('open'))renderArticle();
 });
-const dateInput=document.getElementById('date');dateInput.min=new Date().toISOString().slice(0,10);
+const dateInput=document.getElementById('date');
+const today=new Date();
+dateInput.min=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 const consultForm=document.getElementById('consultForm');
-const consultationStep=document.getElementById('consultationStep');
-const feedbackStep=document.getElementById('feedbackStep');
+const consultationSuccess=document.getElementById('successMessage');
 const feedbackForm=document.getElementById('feedbackForm');
+document.querySelector('[data-feedback-scroll]').addEventListener('click',event=>{
+ event.preventDefault();
+ feedbackForm.scrollIntoView({behavior:'smooth',block:'start'});
+});
 const feedbackGroups={
  overall:'feedback.rating.overall',
  usability:'feedback.rating.usability',
@@ -145,13 +150,6 @@ feedbackForm.addEventListener('keydown',event=>{
  setRating(group,next);
  group.querySelector(`[data-rating-value="${next}"]`).focus();
 });
-document.getElementById('backToConsultation').addEventListener('click',()=>{
- feedbackStep.hidden=true;
- consultationStep.hidden=false;
- consultationStep.classList.remove('form-step-enter');
- requestAnimationFrame(()=>consultationStep.classList.add('form-step-enter'));
- consultForm.querySelector('h2').focus();
-});
 feedbackForm.addEventListener('submit',event=>{
  event.preventDefault();
  if(feedbackSubmitted)return;
@@ -177,21 +175,25 @@ function updateFieldValidity(field,key){
   field.setCustomValidity('');
  }
 }
-consultForm.querySelectorAll('input,select,textarea').forEach(field=>field.addEventListener('input',()=>updateFieldValidity(field,null)));
+consultForm.querySelectorAll('input,select,textarea').forEach(field=>{
+ field.addEventListener('input',()=>{
+  updateFieldValidity(field,null);
+  consultationSuccess.classList.remove('show');
+ });
+ field.addEventListener('change',()=>consultationSuccess.classList.remove('show'));
+});
 consultForm.addEventListener('submit',e=>{
  e.preventDefault();
  invalidFields.clear();
- consultForm.querySelectorAll('[required]').forEach(field=>{
-  if(!field.value.trim())updateFieldValidity(field,'validation.required');
-  else if(field.type==='email'&&field.validity.typeMismatch)updateFieldValidity(field,'validation.invalidEmail');
+ consultForm.querySelectorAll('input,select,textarea').forEach(field=>{
+  if(field.required&&!field.value.trim())updateFieldValidity(field,'validation.required');
+  else if(field.type==='email'&&field.value&&field.validity.typeMismatch)updateFieldValidity(field,'validation.invalidEmail');
+  else if(field.type==='date'&&field.value&&field.validity.rangeUnderflow)updateFieldValidity(field,'validation.invalidDate');
   else updateFieldValidity(field,null);
  });
  if(!e.target.reportValidity())return;
- consultationStep.hidden=true;
- feedbackStep.hidden=false;
- feedbackStep.classList.remove('form-step-enter');
- requestAnimationFrame(()=>feedbackStep.classList.add('form-step-enter'));
- document.getElementById('feedbackTitle').focus();
+ consultationSuccess.classList.add('show');
+ consultationSuccess.scrollIntoView({behavior:'smooth',block:'nearest'});
 });
 document.addEventListener('growise:localechange',()=>{
  invalidFields.forEach((key,field)=>field.setCustomValidity(i18n.t(key)));

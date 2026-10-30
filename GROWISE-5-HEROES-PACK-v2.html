@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>GROWISE — Five Hero Concepts</title>
+<style>
+/*
+  GROWISE FIVE HERO PACK
+  Standalone preview + integration source.
+  Production integration: copy one .gw-hero section, its prefixed CSS,
+  and the canvas engine below. Keep the existing homepage hero/orb untouched.
+*/
+:root{
+  --gw-white:#fff;
+  --gw-paper:#fff;
+  --gw-ink:#181b16;
+  --gw-muted:#62685d;
+  --gw-line:rgba(28,40,20,.13);
+  --gw-lime:#b9ff4a;
+  --gw-lime-soft:#d9ff9b;
+  --gw-olive:#648b2d;
+  --gw-olive-dark:#45651e;
+  --gw-max:1240px;
+  --gw-font:Inter,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#f4f5f1;color:var(--gw-ink);font-family:var(--gw-font);}
+button{font:inherit}
+.demo-shell{width:min(1440px,calc(100% - 36px));margin:22px auto 50px;background:#fff;border:1px solid rgba(20,30,10,.1);box-shadow:0 24px 80px rgba(20,30,10,.08);}
+.demo-top{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 28px;border-bottom:1px solid var(--gw-line);background:#fff;}
+.demo-brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;letter-spacing:-.05em;white-space:nowrap}
+.demo-brand-mark{width:31px;height:31px;border-radius:10px;background:var(--gw-lime);display:grid;place-items:center;font-size:19px;color:#18210e}
+.demo-note{font-size:12px;color:#73796e;margin-left:auto;margin-right:16px;text-align:right}
+.demo-locale{display:flex;gap:4px;border:1px solid var(--gw-line);padding:4px;border-radius:30px}
+.demo-locale button,.demo-tabs button{border:0;cursor:pointer}
+.demo-locale button{padding:7px 10px;border-radius:22px;background:transparent;color:var(--gw-muted);font-size:11px;font-weight:700}
+.demo-locale button.active{background:var(--gw-ink);color:#fff}
+.demo-tabs{display:flex;gap:8px;flex-wrap:wrap;padding:16px 28px;border-bottom:1px solid var(--gw-line);background:#fbfcf9}
+.demo-tabs button{padding:10px 15px;border-radius:30px;background:#fff;border:1px solid var(--gw-line);color:#596052;font-size:12px;font-weight:650;transition:.2s ease}
+.demo-tabs button:hover{border-color:rgba(100,139,45,.45);color:var(--gw-olive-dark)}
+.demo-tabs button.active{background:var(--gw-lime);border-color:var(--gw-lime);color:#18210e}
+.demo-stage{padding:0 28px 28px;background:#fff}
+.gw-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1.04fr) minmax(390px,.96fr);align-items:center;gap:clamp(28px,4vw,64px);width:100%;max-width:var(--gw-max);min-height:570px;margin:0 auto;padding:74px 0 52px;overflow:hidden;background:#fff;}
+.gw-hero[hidden]{display:none!important}
+.gw-hero-copy{position:relative;z-index:2;max-width:660px}
+.gw-eyebrow{display:flex;align-items:center;gap:11px;margin:0 0 22px;color:var(--gw-olive-dark);font:600 10px/1.4 "SFMono-Regular",Consolas,monospace;letter-spacing:.13em;text-transform:uppercase}
+.gw-eyebrow:before{content:"";width:23px;height:1px;background:var(--gw-lime);flex:none}
+.gw-title{margin:0;max-width:700px;font-size:clamp(44px,5.1vw,70px);line-height:1.025;font-weight:650;letter-spacing:-.062em;text-wrap:balance}
+.gw-title .accent{color:var(--gw-olive)}
+.gw-description{max-width:560px;margin:23px 0 0;color:var(--gw-muted);font-size:15px;line-height:1.82}
+.gw-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:27px}
+.gw-button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:47px;padding:0 19px;border:1px solid transparent;border-radius:40px;background:var(--gw-lime);color:#18210e;text-decoration:none;font-size:12px;font-weight:750;box-shadow:0 9px 23px rgba(143,202,59,.17);transition:transform .2s ease,box-shadow .2s ease}
+.gw-button:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(143,202,59,.24)}
+.gw-button.secondary{background:#fff;border-color:var(--gw-line);box-shadow:none;color:var(--gw-ink)}
+.gw-button.secondary:hover{border-color:rgba(100,139,45,.45)}
+.gw-footnote{display:flex;align-items:center;gap:10px;margin:24px 0 0;color:#777d72;font-size:11px;line-height:1.5}
+.gw-footnote:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gw-lime);box-shadow:0 0 0 5px rgba(185,255,74,.16);flex:none}
+.gw-visual{position:relative;z-index:1;display:grid;place-items:center;width:100%;height:440px;min-width:0;isolation:isolate}
+.gw-visual:before{content:"";position:absolute;width:86%;height:82%;border-radius:50%;background:radial-gradient(ellipse at center,rgba(185,255,74,.13),rgba(185,255,74,.055) 43%,transparent 73%);filter:blur(5px);z-index:-1;pointer-events:none}
+.gw-scene{display:block;width:100%;height:100%;max-width:590px;overflow:visible;touch-action:pan-y;}
+.gw-callout{position:absolute;z-index:3;min-width:132px;padding:11px 14px 12px;border:1px solid rgba(92,125,49,.18);border-radius:15px;background:rgba(255,255,255,.47);box-shadow:0 10px 30px rgba(38,55,20,.045);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);pointer-events:none}
+.gw-callout small{display:block;margin-bottom:4px;color:#858b7e;font-size:9px;line-height:1.35}
+.gw-callout strong{display:block;color:#20251b;font-size:15px;font-weight:730;letter-spacing:-.035em;line-height:1.2}
+.gw-callout strong em{font-style:normal;color:var(--gw-olive)}
+.gw-callout.one{top:10%;left:1%}
+.gw-callout.two{top:47%;right:0}
+.gw-callout.three{bottom:7%;left:18%}
+.gw-scene-caption{position:absolute;right:5%;bottom:2%;font:9px/1.4 "SFMono-Regular",Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:#929987}
+.demo-bottom{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0 0;border-top:1px solid var(--gw-line);color:#747a70;font-size:11px}
+.demo-bottom strong{color:var(--gw-ink);font-weight:650}
+.demo-hint{padding:15px 28px 19px;background:#fbfcf9;border-top:1px solid var(--gw-line);color:#73796e;font-size:11px;line-height:1.7}
+.demo-hint code{color:var(--gw-olive-dark);font-size:10px}
+
+/* Slightly distinct compositions, while sharing the same typography system. */
+.gw-hero--about .gw-visual{transform:translateX(2%);height:460px}
+.gw-hero--services .gw-visual{transform:translateX(1%)}
+.gw-hero--planner .gw-visual{height:460px}
+.gw-hero--resources .gw-visual{height:450px}
+.gw-hero--consultation .gw-visual{height:450px}
+.gw-hero--resources .gw-callout.one{left:0;top:8%}
+.gw-hero--resources .gw-callout.two{right:0;top:48%}
+.gw-hero--resources .gw-callout.three{left:20%;bottom:5%}
+.gw-hero--consultation .gw-callout.one{left:0;top:9%}
+.gw-hero--consultation .gw-callout.two{right:0;top:47%}
+.gw-hero--consultation .gw-callout.three{left:17%;bottom:5%}
+
+@media(max-width:900px){
+ .gw-hero{grid-template-columns:minmax(0,1fr);gap:10px;padding:55px 0 35px;min-height:auto}
+ .gw-hero-copy{max-width:760px}
+ .gw-title{max-width:720px;font-size:clamp(43px,7.2vw,62px)}
+ .gw-visual{height:390px;max-width:620px;margin:0 auto}
+ .gw-hero--planner .gw-visual,.gw-hero--resources .gw-visual,.gw-hero--consultation .gw-visual{height:390px}
+}
+@media(max-width:560px){
+ .demo-shell{width:100%;margin:0;border:0;box-shadow:none}
+ .demo-top{padding:14px 16px;gap:10px;flex-wrap:wrap}
+ .demo-note{order:3;width:100%;margin:0;text-align:left}
+ .demo-tabs{padding:12px 16px;gap:7px;overflow-x:auto;flex-wrap:nowrap}
+ .demo-tabs button{white-space:nowrap;padding:9px 12px;font-size:11px}
+ .demo-stage{padding:0 17px 22px}
+ .gw-hero{padding:39px 0 28px;gap:4px;min-height:0}
+ .gw-eyebrow{margin-bottom:17px;font-size:9px}
+ .gw-title{font-size:clamp(36px,10.2vw,47px);line-height:1.06;letter-spacing:-.055em}
+ .gw-description{margin-top:16px;font-size:13px;line-height:1.72}
+ .gw-actions{display:flex;gap:8px;margin-top:19px}
+ .gw-button{min-height:43px;padding:0 14px;font-size:11px}
+ .gw-footnote{margin-top:16px;font-size:10px}
+ .gw-visual,.gw-hero--planner .gw-visual,.gw-hero--resources .gw-visual,.gw-hero--consultation .gw-visual{height:300px;margin-top:5px}
+ .gw-callout{min-width:105px;padding:8px 10px;border-radius:12px}
+ .gw-callout small{font-size:8px}
+ .gw-callout strong{font-size:12px}
+ .gw-callout.one{left:0;top:7%}
+ .gw-callout.two{right:0;top:43%}
+ .gw-callout.three{left:17%;bottom:2%}
+ .demo-bottom{align-items:flex-start;flex-direction:column;gap:6px;font-size:10px}
+ .demo-hint{padding:13px 17px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){.gw-button{transition:none}.gw-button:hover{transform:none}}
+</style>
+</head>
+<body>
+<div class="demo-shell">
+  <header class="demo-top">
+    <div class="demo-brand"><span class="demo-brand-mark">↗</span> GROWISE <span style="font-weight:450;color:#899080;letter-spacing:0;font-size:11px">/ HERO STUDIES</span></div>
+    <div class="demo-note">5 hero riêng biệt · nền trắng · lime accent · chuyển động 3D nhiều trục</div>
+    <div class="demo-locale" aria-label="Language"><button class="active" data-demo-lang="vi">VI</button><button data-demo-lang="en">EN</button></div>
+  </header>
+  <nav class="demo-tabs" aria-label="Chọn hero để xem">
+    <button class="active" data-show-hero="about" data-vi="01 · Về Growise" data-en="01 · About Growise">01 · Về Growise</button>
+    <button data-show-hero="services" data-vi="02 · Dịch vụ" data-en="02 · Services">02 · Dịch vụ</button>
+    <button data-show-hero="planner" data-vi="03 · Budget Planner" data-en="03 · Budget Planner">03 · Budget Planner</button>
+    <button data-show-hero="resources" data-vi="04 · Tài nguyên" data-en="04 · Resources">04 · Tài nguyên</button>
+    <button data-show-hero="consultation" data-vi="05 · Tư vấn" data-en="05 · Consultation">05 · Tư vấn</button>
+  </nav>
+  <main class="demo-stage">
+
+    <!-- HERO 01: ABOUT — rotating 3D constellation / connected growth network -->
+    <section class="gw-hero gw-hero--about" data-hero="about">
+      <div class="gw-hero-copy">
+        <p class="gw-eyebrow" data-vi="VỀ GROWISE / 01" data-en="ABOUT GROWISE / 01">VỀ GROWISE / 01</p>
+        <h1 class="gw-title" data-vi-html="Bắt đầu từ hiểu biết. <span class='accent'>Phát triển có định hướng.</span>" data-en-html="Start with clarity. <span class='accent'>Grow with direction.</span>">Bắt đầu từ hiểu biết. <span class="accent">Phát triển có định hướng.</span></h1>
+        <p class="gw-description" data-vi="GROWISE là website hỗ trợ marketing dành cho sinh viên HUFLIT đang cân nhắc khởi nghiệp hoặc phát triển một dự án kinh doanh ban đầu. Từng bước nhỏ được kết nối thành một hướng đi rõ ràng hơn." data-en="GROWISE is a marketing-support website for HUFLIT students exploring entrepreneurship or building an early-stage venture. Small, informed steps connect into a clearer direction.">GROWISE là website hỗ trợ marketing dành cho sinh viên HUFLIT đang cân nhắc khởi nghiệp hoặc phát triển một dự án kinh doanh ban đầu. Từng bước nhỏ được kết nối thành một hướng đi rõ ràng hơn.</p>
+        <div class="gw-actions"><a class="gw-button" href="#about" data-vi="Khám phá Growise ↗" data-en="Discover Growise ↗">Khám phá Growise ↗</a><a class="gw-button secondary" href="#services" data-vi="Xem cách chúng tôi hỗ trợ" data-en="See how we help">Xem cách chúng tôi hỗ trợ</a></div>
+        <p class="gw-footnote" data-vi="Rõ ràng thay vì phô trương · Học hỏi trước khi mở rộng" data-en="Clarity over hype · Learn before you scale">Rõ ràng thay vì phô trương · Học hỏi trước khi mở rộng</p>
+      </div>
+      <div class="gw-visual">
+        <canvas class="gw-scene" data-scene="about" aria-label="Mạng lưới 3D các điểm kết nối đang xoay nhiều chiều"></canvas>
+        <div class="gw-callout one"><small data-vi="Nền tảng" data-en="The foundation">Nền tảng</small><strong data-vi="Hiểu đúng" data-en="Understand">Hiểu đúng</strong></div>
+        <div class="gw-callout two"><small data-vi="Định hướng" data-en="Direction">Định hướng</small><strong data-vi="Đi đúng bước ↗" data-en="Take the next step ↗">Đi đúng bước ↗</strong></div>
+        <div class="gw-callout three"><small data-vi="Tăng trưởng" data-en="Growth">Tăng trưởng</small><strong><em data-vi="Bền vững" data-en="Sustainable">Bền vững</em></strong></div>
+      </div>
+    </section>
+
+    <!-- HERO 02: SERVICES — four distinct 3D service modules around a core -->
+    <section class="gw-hero gw-hero--services" data-hero="services" hidden>
+      <div class="gw-hero-copy">
+        <p class="gw-eyebrow" data-vi="DỊCH VỤ / 02" data-en="SERVICES / 02">DỊCH VỤ / 02</p>
+        <h1 class="gw-title" data-vi-html="Mỗi vấn đề có một cách tiếp cận. <span class='accent'>Mỗi bước có mục tiêu.</span>" data-en-html="A clearer approach for every challenge. <span class='accent'>A purpose for every step.</span>">Mỗi vấn đề có một cách tiếp cận. <span class="accent">Mỗi bước có mục tiêu.</span></h1>
+        <p class="gw-description" data-vi="Từ tư vấn chiến lược, xây dựng kế hoạch marketing đến định hướng nội dung và đo lường. Các nhóm hỗ trợ được tổ chức thành những phần việc dễ hiểu, phù hợp với giai đoạn startup sinh viên." data-en="From marketing strategy and planning to content direction and measurement. Support is organized into practical areas that fit the realities of student startups.">Từ tư vấn chiến lược, xây dựng kế hoạch marketing đến định hướng nội dung và đo lường. Các nhóm hỗ trợ được tổ chức thành những phần việc dễ hiểu, phù hợp với giai đoạn startup sinh viên.</p>
+        <div class="gw-actions"><a class="gw-button" href="#services-list" data-vi="Xem các dịch vụ ↗" data-en="Explore services ↗">Xem các dịch vụ ↗</a><a class="gw-button secondary" href="#consultation" data-vi="Trao đổi nhu cầu" data-en="Discuss your needs">Trao đổi nhu cầu</a></div>
+        <p class="gw-footnote" data-vi="Chiến lược · Kế hoạch · Nội dung · Đo lường" data-en="Strategy · Planning · Content · Measurement">Chiến lược · Kế hoạch · Nội dung · Đo lường</p>
+      </div>
+      <div class="gw-visual">
+        <canvas class="gw-scene" data-scene="services" aria-label="Bốn mô-đun dịch vụ 3D xoay quanh lõi trung tâm"></canvas>
+        <div class="gw-callout one"><small data-vi="01 / Tư duy" data-en="01 / Strategy">01 / Tư duy</small><strong data-vi="Chiến lược" data-en="Strategy">Chiến lược</strong></div>
+        <div class="gw-callout two"><small data-vi="02 / Thực thi" data-en="02 / Execution">02 / Thực thi</small><strong data-vi="Nội dung" data-en="Content">Nội dung</strong></div>
+        <div class="gw-callout three"><small data-vi="03 / Học hỏi" data-en="03 / Learning">03 / Học hỏi</small><strong><em data-vi="Đo lường" data-en="Measure">Đo lường</em></strong></div>
+      </div>
+    </section>
+
+    <!-- HERO 03: PLANNER — 3D budget columns / floating blocks -->
+    <section class="gw-hero gw-hero--planner" data-hero="planner" hidden>
+      <div class="gw-hero-copy">
+        <p class="gw-eyebrow" data-vi="CÔNG CỤ TƯƠNG TÁC / 03" data-en="INTERACTIVE TOOL / 03">CÔNG CỤ TƯƠNG TÁC / 03</p>
+        <h1 class="gw-title" data-vi-html="Ngân sách của bạn. <span class='accent'>Bước đi tiếp theo.</span>" data-en-html="Your budget. <span class='accent'>Your next move.</span>">Ngân sách của bạn. <span class="accent">Bước đi tiếp theo.</span></h1>
+        <p class="gw-description" data-vi="Tạo phương án phân bổ ban đầu dựa trên ngân sách, lĩnh vực, mục tiêu và kênh hiện tại. Dùng bản kế hoạch minh họa để hình dung một thử nghiệm nhỏ, rồi điều chỉnh khi có thêm dữ liệu." data-en="Create an initial allocation based on your budget, industry, goal and current channels. Use the illustrative plan to shape a small experiment, then refine it as you learn.">Tạo phương án phân bổ ban đầu dựa trên ngân sách, lĩnh vực, mục tiêu và kênh hiện tại. Dùng bản kế hoạch minh họa để hình dung một thử nghiệm nhỏ, rồi điều chỉnh khi có thêm dữ liệu.</p>
+        <div class="gw-actions"><a class="gw-button" href="#planner-tool" data-vi="Lập kế hoạch ngân sách ↗" data-en="Open budget planner ↗">Lập kế hoạch ngân sách ↗</a><a class="gw-button secondary" href="#resources" data-vi="Đọc hướng dẫn" data-en="Read the guide">Đọc hướng dẫn</a></div>
+        <p class="gw-footnote" data-vi="Phương án tham khảo, không phải dự báo doanh thu" data-en="An illustrative plan, not a revenue forecast">Phương án tham khảo, không phải dự báo doanh thu</p>
+      </div>
+      <div class="gw-visual">
+        <canvas class="gw-scene" data-scene="planner" aria-label="Các cột phân bổ ngân sách 3D chuyển động"></canvas>
+        <div class="gw-callout one"><small data-vi="Phân bổ" data-en="Allocation">Phân bổ</small><strong data-vi="Có chủ đích" data-en="With purpose">Có chủ đích</strong></div>
+        <div class="gw-callout two"><small data-vi="Thử nghiệm" data-en="Experiment">Thử nghiệm</small><strong data-vi="Bắt đầu nhỏ ↗" data-en="Start small ↗">Bắt đầu nhỏ ↗</strong></div>
+        <div class="gw-callout three"><small data-vi="Tối ưu" data-en="Optimize">Tối ưu</small><strong><em data-vi="Học từ dữ liệu" data-en="Learn from data">Học từ dữ liệu</em></strong></div>
+      </div>
+    </section>
+
+    <!-- HERO 04: RESOURCES — 3D floating book / knowledge layers -->
+    <section class="gw-hero gw-hero--resources" data-hero="resources" hidden>
+      <div class="gw-hero-copy">
+        <p class="gw-eyebrow" data-vi="THƯ VIỆN NHÀ SÁNG LẬP / 04" data-en="FOUNDER LIBRARY / 04">THƯ VIỆN NHÀ SÁNG LẬP / 04</p>
+        <h1 class="gw-title" data-vi-html="Nắm vững kiến thức nền. <span class='accent'>Hành động có mục tiêu.</span>" data-en-html="Build a stronger foundation. <span class='accent'>Act with purpose.</span>">Nắm vững kiến thức nền. <span class="accent">Hành động có mục tiêu.</span></h1>
+        <p class="gw-description" data-vi="Tài liệu và hướng dẫn ngắn gọn giúp bạn hiểu khách hàng, chọn kênh phù hợp, lập ngân sách và theo dõi hiệu quả marketing trong giai đoạn đầu." data-en="Practical guides help you understand customers, choose suitable channels, plan a budget and track early marketing progress.">Tài liệu và hướng dẫn ngắn gọn giúp bạn hiểu khách hàng, chọn kênh phù hợp, lập ngân sách và theo dõi hiệu quả marketing trong giai đoạn đầu.</p>
+        <div class="gw-actions"><a class="gw-button" href="#resource-library" data-vi="Khám phá tài liệu ↗" data-en="Explore resources ↗">Khám phá tài liệu ↗</a><a class="gw-button secondary" href="#planner-tool" data-vi="Mở công cụ ngân sách" data-en="Open budget tool">Mở công cụ ngân sách</a></div>
+        <p class="gw-footnote" data-vi="Đọc · Thử · Đo lường · Điều chỉnh" data-en="Read · Test · Measure · Refine">Đọc · Thử · Đo lường · Điều chỉnh</p>
+      </div>
+      <div class="gw-visual">
+        <canvas class="gw-scene" data-scene="resources" aria-label="Các lớp tài liệu và quyển sách 3D đang xoay đa chiều"></canvas>
+        <div class="gw-callout one"><small data-vi="Kiến thức nền" data-en="Core knowledge">Kiến thức nền</small><strong data-vi="Dễ tiếp cận" data-en="Accessible">Dễ tiếp cận</strong></div>
+        <div class="gw-callout two"><small data-vi="Ứng dụng" data-en="Application">Ứng dụng</small><strong data-vi="Dùng được ngay ↗" data-en="Ready to apply ↗">Dùng được ngay ↗</strong></div>
+        <div class="gw-callout three"><small data-vi="Phát triển" data-en="Development">Phát triển</small><strong><em data-vi="Từng bước" data-en="Step by step">Từng bước</em></strong></div>
+      </div>
+    </section>
+
+    <!-- HERO 05: CONSULTATION — 3D communication nodes / message panels -->
+    <section class="gw-hero gw-hero--consultation" data-hero="consultation" hidden>
+      <div class="gw-hero-copy">
+        <p class="gw-eyebrow" data-vi="CÙNG TRAO ĐỔI / 05" data-en="LET'S TALK / 05">CÙNG TRAO ĐỔI / 05</p>
+        <h1 class="gw-title" data-vi-html="Mỗi startup đều có câu hỏi. <span class='accent'>Hãy bắt đầu trao đổi.</span>" data-en-html="Every startup has questions. <span class='accent'>Let's start a conversation.</span>">Mỗi startup đều có câu hỏi. <span class="accent">Hãy bắt đầu trao đổi.</span></h1>
+        <p class="gw-description" data-vi="Chia sẻ điều bạn đang vướng mắc, mục tiêu và nguồn lực hiện tại. GROWISE giúp bạn hệ thống hóa câu hỏi để xác định bước tiếp theo phù hợp hơn." data-en="Share your challenge, goals and current resources. GROWISE helps you organize the questions and identify a more suitable next step.">Chia sẻ điều bạn đang vướng mắc, mục tiêu và nguồn lực hiện tại. GROWISE giúp bạn hệ thống hóa câu hỏi để xác định bước tiếp theo phù hợp hơn.</p>
+        <div class="gw-actions"><a class="gw-button" href="#consultation-form" data-vi="Gửi yêu cầu tư vấn ↗" data-en="Request a consultation ↗">Gửi yêu cầu tư vấn ↗</a><a class="gw-button secondary" href="#services" data-vi="Xem dịch vụ" data-en="View services">Xem dịch vụ</a></div>
+        <p class="gw-footnote" data-vi="Lắng nghe · Làm rõ · Cùng tìm hướng đi" data-en="Listen · Clarify · Find a way forward">Lắng nghe · Làm rõ · Cùng tìm hướng đi</p>
+      </div>
+      <div class="gw-visual">
+        <canvas class="gw-scene" data-scene="consultation" aria-label="Các bảng hội thoại và điểm kết nối 3D đang xoay đa chiều"></canvas>
+        <div class="gw-callout one"><small data-vi="Bước đầu" data-en="First step">Bước đầu</small><strong data-vi="Lắng nghe" data-en="Listen">Lắng nghe</strong></div>
+        <div class="gw-callout two"><small data-vi="Cùng làm rõ" data-en="Clarify together">Cùng làm rõ</small><strong data-vi="Đúng vấn đề ↗" data-en="The real issue ↗">Đúng vấn đề ↗</strong></div>
+        <div class="gw-callout three"><small data-vi="Kết quả mong đợi" data-en="Intended outcome">Kết quả mong đợi</small><strong><em data-vi="Bước tiếp theo" data-en="Next step">Bước tiếp theo</em></strong></div>
+      </div>
+    </section>
+    <div class="demo-bottom"><span><strong id="active-name">01 / Về Growise</strong> · 3D scene running on multiple rotation axes</span><span>Concept preview only — links are placeholders for integration</span></div>
+  </main>
+  <aside class="demo-hint">Đây là file demo độc lập. Khi ghép vào website thật, chỉ lấy section <code>.gw-hero[data-hero="..."]</code> tương ứng, CSS có tiền tố <code>.gw-</code> và canvas engine bên dưới. Đổi các href placeholder thành route/CTA thật của GROWISE; không thay Hero trang chủ hiện tại.</aside>
+</div>
+<script>
+/* GROWISE 3D HERO ENGINE — isolated, vanilla JS, no libraries. */
+(() => {
+  const canvases = [...document.querySelectorAll('.gw-scene')];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const lime = '#B9FF4A';
+  const lime2 = '#D9FF9B';
+  const olive = '#648B2D';
+  const ink = '#25351A';
+
+  function rotate(p, rx, ry, rz) {
+    let {x,y,z} = p;
+    let c=Math.cos(rx),s=Math.sin(rx); [y,z]=[y*c-z*s,y*s+z*c];
+    c=Math.cos(ry);s=Math.sin(ry); [x,z]=[x*c+z*s,-x*s+z*c];
+    c=Math.cos(rz);s=Math.sin(rz); [x,y]=[x*c-y*s,x*s+y*c];
+    return {x,y,z};
+  }
+  function project(p, w, h, scale=1) {
+    const camera=680, k=camera/(camera+p.z);
+    return {x:w/2+p.x*k*scale,y:h/2+p.y*k*scale,z:p.z,k};
+  }
+  function line(ctx,a,b,color,width=1,alpha=1) {
+    ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();
+  }
+  function dot(ctx,p,r,color,alpha=1) {
+    ctx.save();ctx.globalAlpha=alpha;
+    const g=ctx.createRadialGradient(p.x-r*.35,p.y-r*.4,0,p.x,p.y,r*1.7);
+    g.addColorStop(0,'#ffffff');g.addColorStop(.22,lime2);g.addColorStop(.65,color);g.addColorStop(1,'rgba(100,139,45,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,r*1.7,0,TAU);ctx.fill();ctx.restore();
+  }
+  function ring(ctx, w,h, t, cfg) {
+    const pts=[];const n=cfg.n||100;
+    for(let i=0;i<=n;i++){
+      const a=i/n*TAU;let p={x:Math.cos(a)*cfg.rx,y:Math.sin(a)*cfg.ry,z:Math.sin(a*cfg.wave+t*cfg.waveSpeed)*cfg.depth};
+      p=rotate(p,cfg.rxRot+t*cfg.ax,cfg.ryRot+t*cfg.ay,cfg.rzRot+t*cfg.az);pts.push(project(p,w,h,cfg.scale||1));
+    }
+    ctx.save();ctx.strokeStyle=cfg.color||olive;ctx.globalAlpha=cfg.alpha??.42;ctx.lineWidth=cfg.width||1.1;ctx.setLineDash(cfg.dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.restore();
+    return pts;
+  }
+  function spherePoints(count, radius, phase=0) {
+    const pts=[];const golden=Math.PI*(3-Math.sqrt(5));
+    for(let i=0;i<count;i++){const y=1-(i/(count-1))*2;const r=Math.sqrt(1-y*y);const a=golden*i+phase;pts.push({x:Math.cos(a)*r*radius,y:y*radius,z:Math.sin(a)*r*radius});}
+    return pts;
+  }
+  function drawSphereNetwork(ctx,w,h,t) {
+    // ABOUT: a clearly visible constellation sphere that tumbles on all three axes.
+    // The changing X/Y/Z angles are intentionally more pronounced than the first draft.
+    const pts=spherePoints(112,158,.35);
+    const ax=.58+Math.sin(t*.67)*.72;
+    const ay=.4+t*.62+Math.sin(t*.31)*.3;
+    const az=.2+t*.44+Math.cos(t*.41)*.22;
+    const projected=pts.map(p=>project(rotate(p,ax,ay,az),w,h));
+
+    // A brighter, denser connection mesh makes the sphere readable on a white canvas.
+    for(let i=0;i<pts.length;i++){
+      const near=[];
+      for(let j=i+1;j<pts.length;j++){
+        const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dz=pts[i].z-pts[j].z;
+        near.push([dx*dx+dy*dy+dz*dz,j]);
+      }
+      near.sort((a,b)=>a[0]-b[0]);
+      for(let k=0;k<3;k++){
+        const j=near[k][1];
+        if(projected[i].z+projected[j].z<115)line(ctx,projected[i],projected[j],k===0?'#648B2D':'#85B94B',.95,k===0?.42:.25);
+      }
+    }
+    projected.forEach((p,i)=>dot(ctx,p,p.z<0?1.8:(i%3===0?3:2.45),i%5===0?lime:olive,p.z<0?.78:.98));
+
+    // A moving core and three tilted orbital planes emphasize depth, not flat rotation.
+    const center=project(rotate({x:0,y:0,z:0},ax,ay,az),w,h);
+    dot(ctx,center,18,lime,1);
+    ring(ctx,w,h,t,{rx:214,ry:92,depth:54,wave:2,rxRot:1.12,ryRot:.18,rzRot:.05,ax:.42,ay:.62,az:.36,waveSpeed:1.05,color:olive,alpha:.62,width:1.5});
+    ring(ctx,w,h,t,{rx:100,ry:184,depth:42,wave:3,rxRot:.28,ryRot:1.1,rzRot:.42,ax:-.38,ay:.48,az:.31,waveSpeed:.9,color:'#8CB94F',alpha:.48,width:1.2});
+    ring(ctx,w,h,t,{rx:176,ry:154,depth:32,wave:2,rxRot:.72,ryRot:.66,rzRot:-.55,ax:.3,ay:-.42,az:.52,waveSpeed:.82,color:'#A6C97C',alpha:.38,width:1.05,dash:[3,6]});
+  }
+  function drawServices(ctx,w,h,t) {
+    // Four service satellites occupy different 3D planes and move at different phases.
+    const rx=.75+Math.sin(t*.25)*.25,ry=.55+Math.cos(t*.19)*.35,rz=t*.18;
+    ring(ctx,w,h,t,{rx:188,ry:105,depth:38,wave:2,rxRot:rx,ryRot:ry,rzRot:rz,ax:.15,ay:.33,az:.21,waveSpeed:.9,color:olive,alpha:.5,width:1.25});
+    ring(ctx,w,h,t,{rx:150,ry:135,depth:24,wave:3,rxRot:1.2,ryRot:.15,rzRot:-.5,ax:-.22,ay:.28,az:.17,waveSpeed:.7,color:'#9AB879',alpha:.38,width:1.05});
+    const nodes=[];for(let i=0;i<4;i++){const a=t*.28+i*Math.PI/2;let p={x:Math.cos(a)*178,y:Math.sin(a)*92,z:Math.sin(a*1.3+t*.35)*92};p=rotate(p,rx+Math.sin(t*.2+i)*.18,ry+Math.cos(t*.16+i)*.2,rz);nodes.push(project(p,w,h));}
+    const c=project(rotate({x:0,y:0,z:0},rx,ry,rz),w,h);nodes.forEach((p,i)=>{line(ctx,c,p,olive,1.15,.37);dot(ctx,p,8+i%2*2,i%2?olive:lime,.95)});dot(ctx,c,18,lime,.98);
+    // Small orbiting satellites add depth cues.
+    for(let i=0;i<12;i++){const a=i/12*TAU-t*.2;const p=project(rotate({x:Math.cos(a)*225,y:Math.sin(a)*135,z:Math.cos(a*2+t)*35},rx,ry,rz),w,h);dot(ctx,p,1.6,olive,.55);}
+  }
+  function polygon(ctx, pts, fill, stroke='rgba(80,115,40,.42)', alpha=1) {
+    ctx.save();ctx.globalAlpha=alpha;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();ctx.restore();
+  }
+  function cube(ctx,w,h,t,cfg) {
+    const {x,y,z,bw,bh,bd,phase=0}=cfg;const pulse=1+Math.sin(t*1.3+phase)*.035;
+    const raw=[[-bw/2,-bh/2,-bd/2],[bw/2,-bh/2,-bd/2],[bw/2,bh/2,-bd/2],[-bw/2,bh/2,-bd/2],[-bw/2,-bh/2,bd/2],[bw/2,-bh/2,bd/2],[bw/2,bh/2,bd/2],[-bw/2,bh/2,bd/2]];
+    const v=raw.map(p=>{let q={x:p[0]*pulse+x,y:p[1]*pulse+y+Math.sin(t*1.4+phase)*8,z:p[2]*pulse+z};q=rotate(q,.52+Math.sin(t*.22+phase)*.42,-.46+t*.13+phase*.1,.18+Math.cos(t*.3+phase)*.16);return project(q,w,h)});
+    const faces=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];
+    const sorted=faces.map(f=>({f,depth:f.reduce((s,i)=>s+v[i].z,0)/4})).sort((a,b)=>b.depth-a.depth);
+    sorted.forEach(({f},i)=>polygon(ctx,f.map(j=>v[j]),['rgba(185,255,74,.22)','rgba(217,255,155,.38)','rgba(100,139,45,.07)','rgba(185,255,74,.2)','rgba(100,139,45,.10)','rgba(217,255,155,.15)'][i]||'rgba(185,255,74,.1)'));
+    return v;
+  }
+  function drawPlanner(ctx,w,h,t) {
+    ring(ctx,w,h,t,{rx:220,ry:115,depth:25,wave:2,rxRot:1.12,ryRot:.24,rzRot:.1,ax:.1,ay:.32,az:.16,waveSpeed:.8,color:olive,alpha:.43,width:1.15});
+    const heights=[74,125,96,164,118];const xs=[-178,-88,0,88,178];
+    const bars=[];for(let i=0;i<5;i++){const v=cube(ctx,w,h,t,{x:xs[i],y:40-heights[i]/2,z:Math.sin(t*.5+i)*35,bw:48,bh:heights[i],bd:44,phase:i*.8});bars.push(v);}
+    bars.forEach((v,i)=>{const p=v[6];dot(ctx,p,3.3,i===2?lime:olive,.9);});
+    const c=project(rotate({x:0,y:-8,z:90},.5+Math.sin(t*.2)*.3,-.4+t*.1,.1),w,h);dot(ctx,c,13,lime,.8);
+    for(let i=0;i<8;i++){const a=i/8*TAU+t*.12;const p=project(rotate({x:Math.cos(a)*240,y:Math.sin(a)*118,z:Math.sin(a*2)*30},.8+t*.1,.3+t*.2,-.2),w,h);dot(ctx,p,1.8,olive,.62);}
+  }
+  function drawBook(ctx,w,h,t,centerX,centerY,scale,tilt,phase) {
+    const w0=165*scale,h0=112*scale,d0=18*scale;const verts=[[-w0/2,-h0/2,-d0/2],[w0/2,-h0/2,-d0/2],[w0/2,h0/2,-d0/2],[-w0/2,h0/2,-d0/2],[-w0/2,-h0/2,d0/2],[w0/2,-h0/2,d0/2],[w0/2,h0/2,d0/2],[-w0/2,h0/2,d0/2]];
+    const angle={x:.4+Math.sin(t*.3+phase)*.22,y:-.5+Math.sin(t*.22+phase)*.5,z:tilt+Math.cos(t*.24+phase)*.18};
+    const v=verts.map(q=>project(rotate({x:q[0]+centerX,y:q[1]+centerY+Math.sin(t+phase)*5,z:q[2]},angle.x,angle.y,angle.z),w,h));
+    polygon(ctx,[v[0],v[1],v[2],v[3]],'rgba(217,255,155,.3)','rgba(100,139,45,.55)');
+    polygon(ctx,[v[0],v[3],v[7],v[4]],'rgba(100,139,45,.16)','rgba(100,139,45,.46)');
+    polygon(ctx,[v[3],v[2],v[6],v[7]],'rgba(185,255,74,.2)','rgba(100,139,45,.38)');
+    polygon(ctx,[v[4],v[5],v[6],v[7]],'rgba(255,255,255,.72)','rgba(100,139,45,.32)');
+    // Page rules, mapped along the cover plane.
+    for(let i=0;i<4;i++){const yy=-h0*.25+i*13*scale;const a=project(rotate({x:-w0*.3+centerX,y:yy+centerY-1,z:d0/2+1},angle.x,angle.y,angle.z),w,h);const b=project(rotate({x:w0*.28+centerX,y:yy+centerY-1,z:d0/2+1},angle.x,angle.y,angle.z),w,h);line(ctx,a,b,'#8DAF5D',1,.5-i*.07);}
+    return v;
+  }
+  function drawResources(ctx,w,h,t) {
+    ring(ctx,w,h,t,{rx:210,ry:110,depth:24,wave:2,rxRot:1.05,ryRot:.2,rzRot:-.25,ax:.16,ay:.3,az:.2,waveSpeed:.65,color:olive,alpha:.35,width:1.05,dash:[3,6]});
+    drawBook(ctx,w,h,t,-12,0,1.03,-.18,0);
+    drawBook(ctx,w,h,t,75,-78,.63,.32,1.7);
+    drawBook(ctx,w,h,t,-92,83,.52,-.48,2.8);
+    const c=project(rotate({x:0,y:0,z:75},.5+Math.sin(t*.2)*.3,-.4+t*.16,.2),w,h);dot(ctx,c,10,lime,.95);
+    for(let i=0;i<16;i++){const a=i/16*TAU-t*.15;const p=project(rotate({x:Math.cos(a)*238,y:Math.sin(a)*138,z:Math.cos(2*a+t)*30},.5+t*.12,.5-t*.16,.2),w,h);dot(ctx,p,1.8,olive,.62);}
+  }
+  function drawSpeechPanel(ctx,w,h,t,cfg) {
+    const {x,y,z,phase}=cfg;const bw=118,bh=74,bd=18;
+    const raw=[[-bw/2,-bh/2,-bd/2],[bw/2,-bh/2,-bd/2],[bw/2,bh/2,-bd/2],[-bw/2,bh/2,-bd/2],[-bw/2,-bh/2,bd/2],[bw/2,-bh/2,bd/2],[bw/2,bh/2,bd/2],[-bw/2,bh/2,bd/2]];
+    // Every panel independently tumbles in pitch, yaw and roll while gently bobbing.
+    const ang={x:.58+Math.sin(t*.72+phase)*.68,y:-.52+t*.31+Math.cos(t*.61+phase)*.62,z:.18+Math.sin(t*.57+phase)*.48};
+    const px=x+Math.sin(t*.42+phase)*17,py=y+Math.cos(t*.36+phase)*14,pz=z+Math.sin(t*.49+phase)*38;
+    const v=raw.map(p=>project(rotate({x:p[0]+px,y:p[1]+py+Math.sin(t*1.15+phase)*9,z:p[2]+pz},ang.x,ang.y,ang.z),w,h));
+    polygon(ctx,[v[0],v[1],v[2],v[3]],'rgba(255,255,255,.76)','rgba(100,139,45,.62)');
+    polygon(ctx,[v[3],v[2],v[6],v[7]],'rgba(217,255,155,.3)','rgba(100,139,45,.48)');
+    polygon(ctx,[v[0],v[3],v[7],v[4]],'rgba(185,255,74,.2)','rgba(100,139,45,.4)');
+    const a=project(rotate({x:px-bw*.25,y:py-9,z:pz+bd},ang.x,ang.y,ang.z),w,h),b=project(rotate({x:px+bw*.25,y:py-9,z:pz+bd},ang.x,ang.y,ang.z),w,h);line(ctx,a,b,olive,2.2,.82);
+    const d=project(rotate({x:px-bw*.25,y:py+10,z:pz+bd},ang.x,ang.y,ang.z),w,h),e=project(rotate({x:px+bw*.12,y:py+10,z:pz+bd},ang.x,ang.y,ang.z),w,h);line(ctx,d,e,lime,3.2,1);
+    return {x:px,y:py,z:pz,v};
+  }
+  function drawConsultation(ctx,w,h,t) {
+    // CONSULTATION: three message panels orbit and tumble independently in 3D.
+    const rx=.72+Math.sin(t*.52)*.58,ry=.5+Math.cos(t*.43)*.62,rz=t*.34;
+    ring(ctx,w,h,t,{rx:210,ry:104,depth:48,wave:2,rxRot:.92,ryRot:.48,rzRot:.12,ax:.38,ay:.52,az:.42,waveSpeed:1.02,color:olive,alpha:.58,width:1.35});
+    ring(ctx,w,h,t,{rx:150,ry:160,depth:38,wave:3,rxRot:.22,ryRot:1.18,rzRot:-.46,ax:-.38,ay:.46,az:.34,waveSpeed:.86,color:'#9AB879',alpha:.43,width:1.1,dash:[3,5]});
+    ring(ctx,w,h,t,{rx:185,ry:78,depth:62,wave:2,rxRot:1.5,ryRot:.38,rzRot:.65,ax:.45,ay:-.34,az:.5,waveSpeed:.78,color:'#B3CE8F',alpha:.36,width:1});
+    const center=project(rotate({x:0,y:0,z:0},rx,ry,rz),w,h);
+    const panels=[{x:-150,y:-55,z:15,phase:.3},{x:138,y:-82,z:-15,phase:1.8},{x:58,y:95,z:55,phase:2.7}];
+    panels.forEach((cfg)=>{
+      const orbit=rotate({x:cfg.x+Math.sin(t*.42+cfg.phase)*17,y:cfg.y+Math.cos(t*.36+cfg.phase)*14,z:cfg.z+Math.sin(t*.49+cfg.phase)*38},rx+Math.sin(t*.4+cfg.phase)*.15,ry+Math.cos(t*.35+cfg.phase)*.16,rz);
+      const p=project(orbit,w,h);
+      line(ctx,center,p,olive,1.2,.48);
+      drawSpeechPanel(ctx,w,h,t,cfg);
+      dot(ctx,p,4.6,lime,.96);
+    });
+    dot(ctx,center,18,lime,1);
+    for(let i=0;i<16;i++){
+      const a=i/16*TAU+t*.22;
+      const p=project(rotate({x:Math.cos(a)*235,y:Math.sin(a)*140,z:Math.sin(a*2+t)*52},rx+Math.sin(t*.3)*.18,ry+Math.cos(t*.27)*.2,rz),w,h);
+      dot(ctx,p,1.9,olive,.68);
+    }
+  }
+  const renderers={about:drawSphereNetwork,services:drawServices,planner:drawPlanner,resources:drawResources,consultation:drawConsultation};
+  const states=new Map();
+  function resize(canvas,state){const rect=canvas.getBoundingClientRect();if(rect.width<2||rect.height<2)return false;const dpr=Math.min(window.devicePixelRatio||1,1.7),w=Math.round(rect.width*dpr),h=Math.round(rect.height*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;state.w=rect.width;state.h=rect.height;return true;}return false;}
+  function draw(state,now,once=false){if(!state.running)return;const {canvas,ctx,type}=state;const rect=canvas.getBoundingClientRect();if(rect.width<2||rect.height<2){state.running=false;state.raf=0;return;}resize(canvas,state);const dpr=canvas.width/rect.width;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,rect.width,rect.height);const t=(now-state.started)/1000;
+    // Soft local glow follows the center of every 3D composition.
+    const glow=ctx.createRadialGradient(rect.width*.5,rect.height*.5,5,rect.width*.5,rect.height*.5,Math.min(rect.width,rect.height)*.48);glow.addColorStop(0,'rgba(185,255,74,.075)');glow.addColorStop(.55,'rgba(185,255,74,.025)');glow.addColorStop(1,'rgba(185,255,74,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,rect.width,rect.height);
+    renderers[type](ctx,rect.width,rect.height,t,.34+Math.sin(t*.31)*.5,.4+Math.cos(t*.23)*.55,.12+t*.13);
+    if(once){state.running=false;state.raf=0;}else{state.raf=requestAnimationFrame(ts=>draw(state,ts));}
+  }
+  function start(state){if(state.running||document.hidden||!state.visible)return;state.running=true;state.started=performance.now();if(reduceMotion){draw(state,state.started,true);}else{state.raf=requestAnimationFrame(ts=>draw(state,ts));}}
+  function stop(state){state.running=false;if(state.raf)cancelAnimationFrame(state.raf);state.raf=0;}
+  canvases.forEach(canvas=>{const type=canvas.dataset.scene,ctx=canvas.getContext('2d');const state={canvas,ctx,type,visible:false,running:false,raf:0,started:0};states.set(canvas,state);if('IntersectionObserver'in window){const io=new IntersectionObserver(entries=>entries.forEach(e=>{state.visible=e.isIntersecting&&e.intersectionRatio>0;if(state.visible)start(state);else stop(state);}),{threshold:.01});io.observe(canvas);}else{state.visible=true;start(state);}});
+  document.addEventListener('visibilitychange',()=>states.forEach(s=>document.hidden?stop(s):start(s)));
+  window.addEventListener('resize',()=>states.forEach(s=>{resize(s.canvas,s);if(s.visible){stop(s);start(s);}}),{passive:true});
+
+  // Preview tabs: only the selected hero is displayed; IntersectionObserver
+  // automatically pauses canvases belonging to hidden hero sections.
+  const tabs=[...document.querySelectorAll('[data-show-hero]')];
+  const sections=[...document.querySelectorAll('[data-hero]')];
+  const name=document.getElementById('active-name');
+  const labels={about:['01','Về Growise','About Growise'],services:['02','Dịch vụ','Services'],planner:['03','Budget Planner','Budget Planner'],resources:['04','Tài nguyên','Resources'],consultation:['05','Tư vấn','Consultation']};
+  function showHero(id){sections.forEach(s=>s.hidden=s.dataset.hero!==id);tabs.forEach(b=>b.classList.toggle('active',b.dataset.showHero===id));const l=labels[id];name.textContent=`${l[0]} / ${document.documentElement.lang==='vi'?l[1]:l[2]}`;}
+  tabs.forEach(b=>b.addEventListener('click',()=>showHero(b.dataset.showHero)));
+  const localeButtons=[...document.querySelectorAll('[data-demo-lang]')];
+  function setLang(lang){document.documentElement.lang=lang;localeButtons.forEach(b=>b.classList.toggle('active',b.dataset.demoLang===lang));document.querySelectorAll('[data-vi][data-en]').forEach(el=>el.textContent=el.dataset[lang]);document.querySelectorAll('[data-vi-html][data-en-html]').forEach(el=>el.innerHTML=el.dataset[lang+'Html']);showHero(document.querySelector('.demo-tabs button.active').dataset.showHero);}
+  localeButtons.forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.demoLang)));
+  // Start the selected scene after first layout has settled.
+  showHero('about');
+})();
+</script>
+</body>
+</html>
