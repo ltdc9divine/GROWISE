@@ -486,7 +486,7 @@
     ["auth.login.register", "Create a student account", "Tạo tài khoản sinh viên"],
     ["auth.register.heading", "Create a student account", "Tạo tài khoản sinh viên"],
     ["auth.register.username", "Account", "Tài khoản"],
-    ["auth.register.email", "Confirmation email", "Email xác nhận"],
+    ["auth.register.email", "Email", "Email"],
     ["auth.register.submit", "Register", "Đăng ký"],
     ["auth.register.back", "Back to sign in", "Quay lại đăng nhập"],
     ["auth.username", "Username", "Tên đăng nhập"],
@@ -520,7 +520,8 @@
     ["auth.message.invalidField", "Please check this value and try again.", "Vui lòng kiểm tra thông tin này và thử lại."],
     ["auth.message.invalidCredentials", "Username or password is incorrect.", "Tên đăng nhập hoặc mật khẩu không chính xác."],
     ["auth.message.invalidUsername", "Enter an account as name-mssv with one hyphen, for example dat-231283h1. Name accents, spaces, and invalid name characters are removed; the student ID must contain only letters and numbers.", "Nhập tài khoản theo dạng name-mssv với một dấu gạch nối, ví dụ dat-231283h1. Dấu, khoảng trắng và ký tự không hợp lệ trong tên sẽ được bỏ; MSSV chỉ gồm chữ và số."],
-    ["auth.message.registrationSent", "Check your email to confirm the account. Student status remains pending until an administrator verifies it.", "Hãy kiểm tra email để xác nhận tài khoản. Trạng thái sinh viên sẽ chờ quản trị viên xác minh."],
+    ["auth.message.emailSignupDisabled", "Email sign-up is disabled in Supabase. Enable the Email provider to create an account.", "Supabase đang tắt đăng ký bằng email. Hãy bật nhà cung cấp Email để tạo tài khoản."],
+    ["auth.message.registrationNeedsConfiguration", "Supabase did not start a signed-in session. Disable email confirmation in Supabase Auth for immediate sign-in, then check whether the account was created before retrying.", "Supabase chưa đăng nhập tài khoản sau khi đăng ký. Để đăng nhập ngay, hãy tắt xác nhận email trong Supabase Auth; trước khi thử lại, hãy kiểm tra tài khoản đã được tạo chưa."],
     ["auth.message.registrationFailure", "We could not create the account. Check the username and email, or try again later.", "Không thể tạo tài khoản. Hãy kiểm tra tên tài khoản và email hoặc thử lại sau."],
     ["auth.message.networkError", "A network error interrupted the request. Check your connection and try again.", "Lỗi mạng làm gián đoạn yêu cầu. Hãy kiểm tra kết nối và thử lại."],
     ["auth.message.passwordMinimum", "Password must contain at least 8 characters.", "Mật khẩu phải có ít nhất 8 ký tự."],
@@ -532,8 +533,7 @@
     ["auth.message.reviewUpdated", "Student status updated.", "Đã cập nhật trạng thái sinh viên."],
     ["auth.message.reviewError", "Student status could not be updated.", "Không thể cập nhật trạng thái sinh viên."],
     ["auth.message.signedOut", "You have signed out.", "Bạn đã đăng xuất."],
-    ["auth.message.passwordChangeRequired", "Change the temporary administrator password before using administrator tools.", "Hãy đổi mật khẩu quản trị viên tạm thời trước khi sử dụng công cụ quản trị."],
-    ["auth.message.verifiedEmail", "Confirm your email before signing in.", "Hãy xác nhận email trước khi đăng nhập."]
+    ["auth.message.passwordChangeRequired", "Change the temporary administrator password before using administrator tools.", "Hãy đổi mật khẩu quản trị viên tạm thời trước khi sử dụng công cụ quản trị."]
   ];
 
   const messages = { vi: Object.create(null), en: Object.create(null) };

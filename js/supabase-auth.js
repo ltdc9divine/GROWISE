@@ -313,15 +313,16 @@
         email: form.elements.email.value.trim(),
         password,
         options: {
-          data: { username: normalizedUsername.username },
-          emailRedirectTo: redirectUrl()
+          data: { username: normalizedUsername.username }
         }
       });
       if (error) {
         setStatus(
-          isNetworkFailure(error)
-            ? "auth.message.networkError"
-            : "auth.message.registrationFailure",
+          error.code === "email_provider_disabled"
+            ? "auth.message.emailSignupDisabled"
+            : isNetworkFailure(error)
+              ? "auth.message.networkError"
+              : "auth.message.registrationFailure",
           "error"
         );
         return;
@@ -334,9 +335,7 @@
         form.reset();
         await loadProfile(data.session);
       } else {
-        form.reset();
-        setView("register");
-        setStatus("auth.message.registrationSent");
+        setStatus("auth.message.registrationNeedsConfiguration", "error");
       }
     } catch (error) {
       setStatus(isNetworkFailure(error) ? "auth.message.networkError" : "auth.message.registrationFailure", "error");
