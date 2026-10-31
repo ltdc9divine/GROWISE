@@ -17,6 +17,7 @@
   const sdk = window.supabase;
   const usernames = window.GrowiseUsername;
   const studentAuth = window.GrowiseStudentAuth;
+  const adminDashboard = window.GrowiseAdminDashboard;
   const minimumPasswordLength = 8;
   let client = null;
   let studentAuthClient = null;
@@ -162,6 +163,7 @@
     currentAccountRole = null;
     setNavigationLabel();
     pendingStudents = [];
+    adminDashboard?.clear();
     document.getElementById("authAdminPanel").hidden = true;
     document.getElementById("authAdminStudents").replaceChildren();
     document.getElementById("authStudentAccountView").hidden = true;
@@ -218,7 +220,12 @@
           return true;
         }
         if (modal.classList.contains("open")) setView("account");
-        if (!profile.must_change_password) await loadPendingStudents(revision);
+        if (!profile.must_change_password) {
+          await Promise.all([
+            loadPendingStudents(revision),
+            Promise.resolve(adminDashboard?.load(session))
+          ]);
+        }
         return true;
       }
 
@@ -737,6 +744,7 @@
 
   if (sdk?.createClient && config?.url && config?.publishableKey) {
     try {
+      adminDashboard?.initialize(config);
       client = sdk.createClient(config.url, config.publishableKey, {
         auth: {
           autoRefreshToken: true,

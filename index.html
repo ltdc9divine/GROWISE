@@ -16,6 +16,7 @@
 <script src="js/username.js" defer></script>
 <script src="js/student-auth.js" defer></script>
 <script src="js/public-form-submissions.js" defer></script>
+<script src="js/admin-dashboard.js" defer></script>
 <script src="js/supabase-auth.js" defer></script>
 <script src="js/main.js" defer></script>
 <script src="js/subpage-orbits.js" defer></script>
@@ -407,6 +408,64 @@
           <button class="btn btn-ghost" type="submit" data-i18n="auth.password.update">Change password</button>
         </form>
         <section id="authAdminPanel" class="auth-admin-panel" hidden>
+          <section id="adminDashboard" class="admin-dashboard" aria-labelledby="adminDashboardHeading">
+            <div class="admin-dashboard-heading">
+              <div>
+                <h3 id="adminDashboardHeading" data-i18n="adminDashboard.heading">GROWISE data dashboard</h3>
+                <p data-i18n="adminDashboard.description">Read-only live data from Supabase.</p>
+              </div>
+              <button id="adminDashboardRefresh" class="btn btn-ghost" type="button" data-i18n="adminDashboard.refresh">Refresh data</button>
+            </div>
+            <div id="adminDashboardSummary" class="admin-dashboard-summary" aria-live="polite"></div>
+            <div class="admin-dashboard-tabs" role="tablist" aria-label="Admin data sections" data-i18n-aria-label="adminDashboard.sections">
+              <button type="button" role="tab" aria-selected="true" data-dashboard-section="overview" data-i18n="adminDashboard.overview">Overview</button>
+              <button type="button" role="tab" aria-selected="false" data-dashboard-section="students" data-i18n="adminDashboard.students">Students</button>
+              <button type="button" role="tab" aria-selected="false" data-dashboard-section="consultations" data-i18n="adminDashboard.consultations">Consultations</button>
+              <button type="button" role="tab" aria-selected="false" data-dashboard-section="feedback" data-i18n="adminDashboard.feedback">Feedback</button>
+            </div>
+            <form id="adminDashboardFilters" class="admin-dashboard-filters">
+              <div class="field admin-dashboard-search">
+                <label for="adminDashboardSearch" data-i18n="adminDashboard.search">Search</label>
+                <input id="adminDashboardSearch" name="q" type="search" maxlength="100" autocomplete="off" data-i18n-placeholder="adminDashboard.searchPlaceholder" placeholder="Search records">
+              </div>
+              <div class="field" id="adminDashboardIndustryFilter" hidden>
+                <label for="adminDashboardIndustry" data-i18n="adminDashboard.industry">Industry</label>
+                <select id="adminDashboardIndustry" name="industry">
+                  <option value="" data-i18n="adminDashboard.allIndustries">All industries</option>
+                  <option value="food_beverage" data-i18n="consultation.industry.food">Food &amp; beverage</option>
+                  <option value="fashion_beauty" data-i18n="consultation.industry.fashion">Fashion &amp; beauty</option>
+                  <option value="education" data-i18n="consultation.industry.education">Education</option>
+                  <option value="consumer_products" data-i18n="consultation.industry.consumer">Consumer products</option>
+                  <option value="services" data-i18n="consultation.industry.services">Services</option>
+                  <option value="technology" data-i18n="consultation.industry.tech">Technology</option>
+                  <option value="other" data-i18n="consultation.industry.other">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="adminDashboardFrom" data-i18n="adminDashboard.from">From date</label>
+                <input id="adminDashboardFrom" name="from" type="date">
+              </div>
+              <div class="field">
+                <label for="adminDashboardTo" data-i18n="adminDashboard.to">To date</label>
+                <input id="adminDashboardTo" name="to" type="date">
+              </div>
+              <div class="field">
+                <label for="adminDashboardSort" data-i18n="adminDashboard.sort">Sort by date</label>
+                <select id="adminDashboardSort" name="sort">
+                  <option value="desc" data-i18n="adminDashboard.newest">Newest first</option>
+                  <option value="asc" data-i18n="adminDashboard.oldest">Oldest first</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" type="submit" data-i18n="adminDashboard.applyFilters">Apply filters</button>
+            </form>
+            <p id="adminDashboardStatus" class="admin-dashboard-status" role="status" aria-live="polite" hidden></p>
+            <div id="adminDashboardRecords" class="admin-dashboard-records"></div>
+            <nav id="adminDashboardPagination" class="admin-dashboard-pagination" aria-label="Dashboard pages" data-i18n-aria-label="adminDashboard.pagination" hidden>
+              <button type="button" class="btn btn-ghost" data-dashboard-page="-1" data-i18n="adminDashboard.previous">Previous</button>
+              <span id="adminDashboardPageLabel"></span>
+              <button type="button" class="btn btn-ghost" data-dashboard-page="1" data-i18n="adminDashboard.next">Next</button>
+            </nav>
+          </section>
           <h3 data-i18n="auth.admin.heading">Student accounts</h3>
           <p data-i18n="auth.admin.description">Provision student accounts and manage legacy pending accounts.</p>
           <form id="authAdminProvisionForm" class="auth-form">
