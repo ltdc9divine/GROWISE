@@ -61,6 +61,25 @@ test("accepts admin only when explicitly allowed", () => {
   assert.equal(normalizeUsername("admin").error, "invalid");
 });
 
+test("student usernames accept Vietnamese diacritics and normalize Unicode", () => {
+  const normalizeStudentUsername = (value) => normalizeUsername(value, {
+    allowVietnamese: true
+  });
+  assert.equal(
+    normalizeStudentUsername("tram-23DH728131").username,
+    "tram-23dh728131"
+  );
+  assert.equal(
+    normalizeStudentUsername("trâm-23DH728131").username,
+    "trâm-23dh728131"
+  );
+  assert.equal(
+    normalizeStudentUsername("tra\u0302m-23DH728131").username,
+    "trâm-23dh728131"
+  );
+  assert.equal(normalizeUsername("trâm-23DH728131").error, "invalid");
+});
+
 test("student login uses the canonical student service; admin keeps password login", () => {
   const html = readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   const auth = readFileSync(
@@ -164,6 +183,10 @@ test("frontend, database, and Edge Functions share the username regex", () => {
     path.join(__dirname, "..", "supabase", "migrations", "20261031163000_create_growise_users.sql"),
     "utf8"
   );
+  const diacriticsMigration = readFileSync(
+    path.join(__dirname, "..", "supabase", "migrations", "20261031165600_allow_vietnamese_student_usernames.sql"),
+    "utf8"
+  );
   const supabaseConfig = readFileSync(
     path.join(__dirname, "..", "supabase", "config.toml"),
     "utf8"
@@ -174,6 +197,7 @@ test("frontend, database, and Edge Functions share the username regex", () => {
   );
 
   assert.equal(context.globalThis.GrowiseUsername.usernamePattern.source, "^[a-z]+-[a-z0-9]+$");
+  assert.ok(context.globalThis.GrowiseUsername.studentUsernamePattern.test("trâm-23dh728131"));
   assert.ok(schema.includes("username ~ '^[a-z]+-[a-z0-9]+$'"));
   assert.ok(schema.includes("submitted_username !~ '^[a-z]+-[a-z0-9]+$'"));
   assert.match(loginFunction, /const usernamePattern = \/\^\[a-z\]\+-\[a-z0-9\]\+\$\//);
@@ -209,6 +233,10 @@ test("frontend, database, and Edge Functions share the username regex", () => {
   assert.match(studentMigration, /already exists; inspect its schema/);
   assert.match(studentMigration, /growise_users_set_updated_at/);
   assert.match(studentMigration, /growise_consume_student_registration_limit/);
+  assert.match(studentFunction, /normalize\("NFC"\)/);
+  assert.ok(studentFunction.includes("àáạ"));
+  assert.match(diacriticsMigration, /normalize\(username, NFC\)/);
+  assert.ok(diacriticsMigration.includes("àáạ"));
   assert.doesNotMatch(studentMigration, /\b(drop|delete from)\b/i);
   assert.doesNotMatch(studentMigration, /alter table public\.growise_profiles/i);
   assert.match(supabaseConfig, /\[functions\.student-login\]\s+verify_jwt = false/);
@@ -268,7 +296,10 @@ test("student login creates and reuses a shared backend profile", async () => {
     student_id: "23dh123456"
   });
   assert.equal((await auth.login("Nguyễn Văn Thanh", "THANH-23DH123456")).student_id, account.student_id);
-  assert.equal(calls.length, 2);
+  const accentedAccount = await auth.login("Trâm Nguyễn", "Trâm-23DH728131");
+  assert.equal(accentedAccount.username, "trâm-23dh728131");
+  assert.equal(accentedAccount.student_id, "23dh728131");
+  assert.equal(calls.length, 3);
   assert.equal(calls[0].url, "https://project.supabase.co/functions/v1/student-login");
   assert.deepEqual(JSON.parse(calls[0].options.body), {
     full_name: "Nguyễn Văn Thanh",
@@ -278,12 +309,12 @@ test("student login creates and reuses a shared backend profile", async () => {
   assert.equal(storage.has("growise.student-session.v1"), true);
 
   const beforeRestore = calls.length;
-  assert.equal((await auth.restoreSession()).student_id, account.student_id);
+  assert.equal((await auth.restoreSession()).student_id, accentedAccount.student_id);
   assert.equal(calls.length, beforeRestore + 1);
   auth.signOut();
   assert.equal(await auth.restoreSession(), null);
   assert.equal(storage.has("growise.student-session.v1"), false);
-  assert.equal(records.size, 1);
+  assert.equal(records.size, 2);
 });
 
 test("student login rejects mismatches and invalid usernames without trusting local data", async () => {

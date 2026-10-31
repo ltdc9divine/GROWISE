@@ -8,7 +8,7 @@ import {
   RequestError
 } from "../_shared/auth.ts";
 
-const usernamePattern = /^[a-z]+-[a-z0-9]+$/;
+const usernamePattern = /^[a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]+-[a-z0-9]+$/;
 
 type StudentProfile = {
   full_name: string;
@@ -20,7 +20,7 @@ function normalizeFullName(value: string): string {
 }
 
 function normalizeUsername(value: string): string {
-  return value.trim().toLowerCase();
+  return value.normalize("NFC").trim().toLowerCase();
 }
 
 function namesMatch(left: string, right: string): boolean {

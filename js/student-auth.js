@@ -33,7 +33,9 @@
       if (fullName.length > 200) {
         throw new StudentAuthError("invalid_full_name");
       }
-      const normalized = usernames.normalizeUsername(rawUsername);
+      const normalized = usernames.normalizeUsername(rawUsername, {
+        allowVietnamese: true
+      });
       if (!normalized.username || normalized.username.length > 64) {
         throw new StudentAuthError("invalid_username");
       }
