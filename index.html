@@ -15,6 +15,7 @@
 <script src="js/supabase-config.js" defer></script>
 <script src="js/username.js" defer></script>
 <script src="js/student-auth.js" defer></script>
+<script src="js/public-form-submissions.js" defer></script>
 <script src="js/supabase-auth.js" defer></script>
 <script src="js/main.js" defer></script>
 <script src="js/subpage-orbits.js" defer></script>
@@ -199,7 +200,7 @@
       <div class="contact-item"><div class="iconbox">⌖</div><div><strong>Personalized context</strong><span>Share your business stage, audience, and immediate priorities.</span></div></div>
       <div class="contact-item"><div class="iconbox">◷</div><div><strong>Flexible consultation</strong><span>Choose online or in-person as a preferred method. Availability needs confirmation.</span></div></div>
       <div class="contact-item"><div class="iconbox">↗</div><div><strong>Practical next steps</strong><span>Focus on useful actions that fit your current resources.</span></div></div>
-      <p class="notice">Demo note: this prototype validates the form in your browser but does not send submissions to a server or book an actual appointment.</p>
+      <p class="notice" data-i18n="consultation.privacy.note">Your consultation request is stored securely for the Growise team to review and respond. Submitting a request does not confirm an appointment.</p>
     </div>
     <div>
     <form class="form-panel" id="consultForm" novalidate><h2 class="panel-title">Book a consultation</h2><p class="panel-sub">Fields marked * are required.</p>
@@ -214,8 +215,8 @@
         <div class="field"><label for="time">Preferred time</label><select id="time"><option value="flexible">Flexible</option><option value="morning">Morning (9 AM–12 PM)</option><option value="afternoon">Afternoon (1 PM–5 PM)</option><option value="evening">Evening (6 PM–8 PM)</option></select></div>
         <div class="field full"><label for="challenge">Current marketing challenges *</label><textarea id="challenge" required placeholder="What are you trying to solve? e.g. choosing channels, low engagement, limited budget..." data-i18n-placeholder="consultation.placeholder.challenge"></textarea></div>
       </div>
-      <button class="btn btn-primary" type="submit" style="width:100%">Submit consultation request ↗</button>
-      <div class="success-message" id="successMessage" role="status" data-i18n="consultation.demo.success">Your demo request has been validated in this browser. No message has been sent yet. Connect a backend or form service to receive real submissions.</div>
+      <button class="btn btn-primary" type="submit" style="width:100%" data-i18n="consultation.submit">Submit consultation request ↗</button>
+      <div class="success-message" id="successMessage" role="status" aria-live="polite" data-i18n="consultation.submit.success">Your consultation request was sent. The Growise team will review it; this does not confirm an appointment.</div>
     </form>
     </div>
   </div></section></div>
@@ -255,7 +256,7 @@
           <form class="form-panel" id="feedbackForm" novalidate>
         <h2 class="panel-title" id="feedbackTitle" tabindex="-1" data-i18n="feedback.title">Feedback</h2>
         <p class="panel-sub" data-i18n="feedback.description">Your feedback helps Growise improve and better support student founders.</p>
-        <p class="notice feedback-demo-note" data-i18n="feedback.demoNote">Demo only: feedback is not sent to or saved on a server.</p>
+        <p class="notice feedback-demo-note" data-i18n="feedback.privacyNote">Feedback is stored without your name or email to help improve Growise.</p>
         <h3 class="feedback-step-title" data-i18n="feedback.step.experience">Step 1: Rate your experience</h3>
         <div class="rating-grid">
           <fieldset class="rating-field"><legend id="ratingLabelOverall" data-i18n="feedback.rating.overall">Overall satisfaction</legend><div class="star-rating" role="radiogroup" aria-labelledby="ratingLabelOverall" data-rating="overall"><button type="button" class="rating-star" role="radio" aria-checked="false" tabindex="0" data-rating-value="1">☆</button><button type="button" class="rating-star" role="radio" aria-checked="false" tabindex="-1" data-rating-value="2">☆</button><button type="button" class="rating-star" role="radio" aria-checked="false" tabindex="-1" data-rating-value="3">☆</button><button type="button" class="rating-star" role="radio" aria-checked="false" tabindex="-1" data-rating-value="4">☆</button><button type="button" class="rating-star" role="radio" aria-checked="false" tabindex="-1" data-rating-value="5">☆</button></div></fieldset>

@@ -2,9 +2,9 @@
 
 ## Current status
 
-Student profiles use `public.growise_users` and the `student-login` Edge Function in Supabase project `oqyibynbowpegjjaigoz` (Growise). Migrations `20261031163000` and `20261031165600` are applied; the function is ACTIVE at version 3 with `verify_jwt=false`. The database and Edge Function accept NFC-normalized Vietnamese letters in student usernames. The frontend update is not yet pushed/deployed, so the current website still rejects accented usernames client-side until its new code is published. Vercel Preview is READY at `https://growise-p9w5vow3d-ltdc9divine-5816s-projects.vercel.app`. Student access checks only name + username: it is not identity authentication, does not create Supabase Auth users/sessions/roles, and must not protect private data. The browser stores only a temporary UI session identity and revalidates it with the Edge Function on restore.
+Student profiles use `public.growise_users` and the `student-login` Edge Function in Supabase project `oqyibynbowpegjjaigoz` (Growise). Migrations `20261031163000` and `20261031165600` are applied; `student-login` is ACTIVE at version 3 with `verify_jwt=false`. The consultation and anonymous-feedback storage migration `20261031221700` is applied, and `submit-website-form` is ACTIVE at version 1 with `verify_jwt=false`. Both form tables have RLS enabled and no `anon`/`authenticated` table grants; only the Edge Function service-role client writes them. The updated website source sends submissions to that function. Student access checks only name + username: it is not identity authentication, does not create Supabase Auth users/sessions/roles, and must not protect private data.
 
-The previous `growise_demo_students` table and `student-demo-login` function remain in the project as legacy objects; neither is used by the current frontend. Two records remain in that legacy table and were not copied, updated, or deleted. The archived source is under `../supabase/archive/`. Do not drop legacy database objects until their dependencies and backup/rollback plan have been reviewed.
+The previous `growise_demo_students` table and `student-demo-login` function remain in the project as legacy objects; neither is used by the current frontend. Three records remain in that legacy table and were not copied, updated, or deleted. The archived source is under `../supabase/archive/`. Do not drop legacy database objects until their dependencies and backup/rollback plan have been reviewed.
 
 All seven website routes remain public. Authentication protects account operations and the administrator's student-review data; it does not gate the existing pages, Consultation, or Feedback.
 
@@ -16,7 +16,7 @@ All seven website routes remain public. Authentication protects account operatio
 - Student sign-in assigns no Supabase role and creates no Supabase session. Keep student-only protected data/features disabled until the school provides real authentication.
 - Admin sign-in remains username/password and retains the trusted admin role and forced password-change checks. Sessions persist until sign-out.
 - Admin users can continue managing Supabase student profiles through the admin-only Edge Function. Public Auth signups should remain disabled.
-- Consultation and Feedback remain public, client-only demonstrations and are not saved to Supabase.
+- Consultation submissions are stored in `public.growise_consultation_requests` with the fields in the current form. Feedback is stored anonymously in `public.growise_feedback_submissions`; the form does not request name/email. Project administrators review both tables in Supabase Table Editor; no email notification or website admin inbox is configured. The tables are not exposed directly to browser clients.
 - Administrator passwords must contain at least 8 characters in the frontend and password-change function. Configure Supabase Auth to enforce the same minimum; its hosted setting must be checked separately.
 
 ## Dashboard configuration
@@ -24,7 +24,7 @@ All seven website routes remain public. Authentication protects account operatio
 1. Confirm the target Supabase project and inspect it for existing tables, functions, or triggers with the same names before applying this proposal. Take a verified restorable database backup.
 2. In **Authentication → Sign In / Providers → Email**, keep Email enabled for administrator password sign-in/recovery, and disable public signups. Student sign-in does not use email or OTP.
 3. In **Authentication → URL Configuration**, set the Site URL to `https://growise-five.vercel.app` and add exact redirect URLs for production and the development origins actually used (for example `http://localhost:5500/**` and `http://127.0.0.1:5500/**`). Do not use a broad wildcard for production.
-4. Do **not** rerun [`../supabase/schema.sql`](../supabase/schema.sql) against an existing database. The additive student migration is [`../supabase/migrations/20261031163000_create_growise_users.sql`](../supabase/migrations/20261031163000_create_growise_users.sql); it creates `growise_users`, a private timestamp trigger, and a canonical rate-limit RPC wrapper, without changing admin profiles/roles or deleting legacy records. It preflights that the target table is absent and legacy rate-limit objects exist. Follow-up migration [`../supabase/migrations/20261031165600_allow_vietnamese_student_usernames.sql`](../supabase/migrations/20261031165600_allow_vietnamese_student_usernames.sql) is applied and widens the canonical student username constraint to allow NFC-normalized Vietnamese letters. The prior `20261031` username-format and `20261101` OTP migrations remain pending. Do not run `db push` while those unrelated migrations are pending.
+4. Do **not** rerun [`../supabase/schema.sql`](../supabase/schema.sql) against an existing database. The additive student migration is [`../supabase/migrations/20261031163000_create_growise_users.sql`](../supabase/migrations/20261031163000_create_growise_users.sql); it creates `growise_users`, a private timestamp trigger, and a canonical rate-limit RPC wrapper, without changing admin profiles/roles or deleting legacy records. Follow-up migration [`../supabase/migrations/20261031165600_allow_vietnamese_student_usernames.sql`](../supabase/migrations/20261031165600_allow_vietnamese_student_usernames.sql) widens the student username constraint. Migration [`../supabase/migrations/20261031221700_store_public_form_submissions.sql`](../supabase/migrations/20261031221700_store_public_form_submissions.sql) adds the two protected form tables and a private IP-hash rate limiter. All three are applied. The prior `20261031` username-format and `20261101` OTP migrations remain pending; do not run `db push` while those unrelated migrations are pending.
 5. In **Project Settings → API**, confirm the URL and publishable key. These are public browser configuration; they are already placed in [`../js/supabase-config.js`](../js/supabase-config.js). Never place the service-role key in the website or Git.
 6. Install/use the Supabase CLI in an approved development environment, authenticate, and link it to the verified project. Set Edge Function secrets without putting secret values in source or documentation:
 
@@ -33,13 +33,14 @@ All seven website routes remain public. Authentication protects account operatio
    ```
 
    Set `GROWISE_ALLOWED_ORIGINS` to a comma-separated list of exact origins; when set, it replaces the defaults. Each new Preview hostname must be allowlisted before browser use. Do not add a wildcard. Include any other exact localhost origin used. `SUPABASE_SERVICE_ROLE_KEY` must only exist in the trusted Edge Function secret store. The browser uses only the publishable key. The student function requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; the existing admin functions may also require `SUPABASE_ANON_KEY`.
-7. Deploy only the student endpoint for this flow:
+7. Deploy only the required Edge Function for the flow being changed:
 
    ```powershell
    supabase functions deploy student-login
+   supabase functions deploy submit-website-form
    ```
 
-   The frontend calls only `student-login` for student profiles. The older `student-demo-login` deployment remains active for compatibility with the current Production site, but this frontend does not call it. Its source and the OTP function source are archived and their config sections removed. No legacy function or migration was removed; the old username-format and OTP migrations remain pending.
+   The frontend calls `student-login` for student profiles and `submit-website-form` for Consultation/Feedback submissions. The older `student-demo-login` deployment remains active but unused by the current frontend. Its source and the OTP function source are archived. No legacy function or migration was removed; the old username-format and OTP migrations remain pending.
 8. Configure email delivery only as needed for administrator recovery. Student sign-in sends no email or OTP.
 
 ## First administrator provisioning
@@ -59,6 +60,8 @@ The function refuses to run if an admin/profile is already provisioned or the Au
 - [`../js/student-auth.js`](../js/student-auth.js) calls the shared `student-login` Edge Function and stores only a temporary UI session identity in browser `localStorage`; every restore is revalidated. Legacy session state is verified and migrated to the current session key.
 - [`../js/supabase-auth.js`](../js/supabase-auth.js) keeps the existing administrator password login, session, password/email management, and admin-only student management. Student display contains only the database-returned full name and student ID.
 - [`../supabase/functions/student-login/index.ts`](../supabase/functions/student-login/index.ts) validates and normalizes name/username, derives the student ID, stores/reuses `growise_users` through a server-side service-role client, handles unique-key races, and rate-limits new records. It creates no Auth user/session/role and does not use admin/profile APIs.
+- [`../js/public-form-submissions.js`](../js/public-form-submissions.js) calls the single `submit-website-form` Edge Function with the browser publishable key only. [`../supabase/functions/submit-website-form/index.ts`](../supabase/functions/submit-website-form/index.ts) validates and rate-limits both public forms, then stores consultation data and anonymous feedback using the server-side service-role client.
+- [`../supabase/migrations/20261031221700_store_public_form_submissions.sql`](../supabase/migrations/20261031221700_store_public_form_submissions.sql) creates `growise_consultation_requests`, `growise_feedback_submissions`, and a private rate-limit table/RPC. RLS is enabled and no direct browser-role table grants or policies are added.
 - [`../supabase/migrations/20261031163000_create_growise_users.sql`](../supabase/migrations/20261031163000_create_growise_users.sql) creates the RLS-protected canonical table with no `anon`/`authenticated` table privileges and a case-insensitive unique username index.
 - [`../supabase/archive/`](../supabase/archive/) retains legacy OTP and demo Edge Function source; [`../supabase/migrations/20261031090700_student_demo_students.sql`](../supabase/migrations/20261031090700_student_demo_students.sql) remains in migration history because it was applied.
 - [`../supabase/archive/functions/student-otp-login/index.ts`](../supabase/archive/functions/student-otp-login/index.ts) retains the legacy source and is not an active Supabase function.
@@ -74,6 +77,8 @@ The function refuses to run if an admin/profile is already provisioned or the Au
 Do not report authentication as live until all of these are tested against the configured project:
 
 - Verify profile creation, matching-name reuse, mismatch rejection, invalid-username rejection, reload revalidation, and sign-out while keeping the database row. These endpoint/browser tests were run using synthetic test data against the configured project.
+- Consultation and feedback submissions were sent to the deployed endpoint with synthetic test content; valid rows were created, invalid ratings rejected, and the two exact test rows removed afterward. Browser form submission was separately verified with a mocked endpoint.
+- Supabase REST read attempts for the new form tables using the publishable key were denied/not exposed. Allowed Production and localhost CORS preflights returned 204; an unlisted origin returned 403.
 - Confirm student login calls only `student-login`, creates no Supabase Auth user/session or role, and cannot directly read/write `growise_users` with the publishable key. Direct REST read returned HTTP 401.
 - Verify student account display contains only the returned full name and database student ID.
 - Verify admin password sign-in, forced password change, provisioning, lock/reactivation, and management functions remain intact.

@@ -4,5 +4,8 @@ verify_jwt = false
 [functions.student-login]
 verify_jwt = false
 
+[functions.submit-website-form]
+verify_jwt = false
+
 [auth]
 password_min_length = 8

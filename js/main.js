@@ -70,6 +70,12 @@ document.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',(
 }));
 document.addEventListener('growise:localechange',()=>{
  updateMenuLabel();
+ if(consultationSubmitting){
+  consultForm.querySelector('[type="submit"]').textContent=i18n.t('consultation.submit.pending');
+ }
+ if(feedbackSubmitting){
+  feedbackForm.querySelector('[type="submit"]').textContent=i18n.t('feedback.submit.pending');
+ }
  if(modal.classList.contains('open'))renderArticle();
 });
 const dateInput=document.getElementById('date');
@@ -78,6 +84,7 @@ dateInput.min=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0
 const consultForm=document.getElementById('consultForm');
 const consultationSuccess=document.getElementById('successMessage');
 const feedbackForm=document.getElementById('feedbackForm');
+const formSubmissionClient=window.GrowiseFormSubmissions.createClient(window.GROWISE_SUPABASE_CONFIG);
 document.querySelector('[data-feedback-scroll]').addEventListener('click',event=>{
  event.preventDefault();
  feedbackForm.scrollIntoView({behavior:'smooth',block:'start'});
@@ -94,6 +101,16 @@ const feedbackGroups={
 const invalidFields=new Map();
 let feedbackMissingKeys=[];
 let feedbackSubmitted=false;
+let feedbackSubmitting=false;
+let consultationSubmitting=false;
+function showSubmissionError(error){
+ const key=error?.code==='network_error'
+  ?'publicForm.networkError'
+  :error?.code==='rate_limited'
+   ?'publicForm.rateLimited'
+   :'publicForm.submitError';
+ window.Growise.toast(i18n.t(key));
+}
 function renderRatingGroup(group){
  const key=feedbackGroups[group.dataset.rating];
  if(!key)return;
@@ -150,21 +167,51 @@ feedbackForm.addEventListener('keydown',event=>{
  setRating(group,next);
  group.querySelector(`[data-rating-value="${next}"]`).focus();
 });
-feedbackForm.addEventListener('submit',event=>{
+feedbackForm.addEventListener('submit',async event=>{
  event.preventDefault();
- if(feedbackSubmitted)return;
+ if(feedbackSubmitted||feedbackSubmitting)return;
  feedbackMissingKeys=Object.entries(feedbackGroups)
   .filter(([name])=>!Number(feedbackForm.querySelector(`[data-rating="${name}"]`).dataset.value))
   .map(([,key])=>key);
  renderFeedbackError();
  if(feedbackMissingKeys.length){
-  feedbackForm.querySelector(`[data-rating="${Object.keys(feedbackGroups).find(name=>!Number(feedbackForm.querySelector(`[data-rating="${name}"]`).dataset.value))}"] .rating-star`).focus();
+  const firstMissing=Object.keys(feedbackGroups).find(name=>
+   !Number(feedbackForm.querySelector(`[data-rating="${name}"]`).dataset.value)
+  );
+  feedbackForm.querySelector(`[data-rating="${firstMissing}"] .rating-star`).focus();
   return;
  }
- feedbackSubmitted=true;
- feedbackForm.hidden=true;
- document.getElementById('feedbackComplete').hidden=false;
- document.getElementById('feedbackComplete').querySelector('.panel-title').focus();
+
+ const submitButton=feedbackForm.querySelector('[type="submit"]');
+ const ratings=Object.fromEntries(Object.keys(feedbackGroups).map(name=>[
+  name,
+  Number(feedbackForm.querySelector(`[data-rating="${name}"]`).dataset.value)
+ ]));
+ feedbackSubmitting=true;
+ submitButton.disabled=true;
+ submitButton.dataset.i18n='feedback.submit.pending';
+ submitButton.textContent=i18n.t('feedback.submit.pending');
+ feedbackForm.setAttribute('aria-busy','true');
+ try{
+  await formSubmissionClient.submit('feedback',{
+   ratings,
+   liked:document.getElementById('feedbackLiked').value,
+   improve:document.getElementById('feedbackImprove').value,
+   requested_features:document.getElementById('feedbackFeatures').value
+  });
+  feedbackSubmitted=true;
+  feedbackForm.hidden=true;
+  document.getElementById('feedbackComplete').hidden=false;
+  document.getElementById('feedbackComplete').querySelector('.panel-title').focus();
+ }catch(error){
+  showSubmissionError(error);
+ }finally{
+  feedbackSubmitting=false;
+  submitButton.disabled=false;
+  submitButton.dataset.i18n='feedback.submit';
+  submitButton.textContent=i18n.t('feedback.submit');
+  feedbackForm.removeAttribute('aria-busy');
+ }
 });
 function updateFieldValidity(field,key){
  if(key) {
@@ -182,8 +229,9 @@ consultForm.querySelectorAll('input,select,textarea').forEach(field=>{
  });
  field.addEventListener('change',()=>consultationSuccess.classList.remove('show'));
 });
-consultForm.addEventListener('submit',e=>{
+consultForm.addEventListener('submit',async e=>{
  e.preventDefault();
+ if(consultationSubmitting)return;
  invalidFields.clear();
  consultForm.querySelectorAll('input,select,textarea').forEach(field=>{
   if(field.required&&!field.value.trim())updateFieldValidity(field,'validation.required');
@@ -192,8 +240,38 @@ consultForm.addEventListener('submit',e=>{
   else updateFieldValidity(field,null);
  });
  if(!e.target.reportValidity())return;
- consultationSuccess.classList.add('show');
- consultationSuccess.scrollIntoView({behavior:'smooth',block:'nearest'});
+ const submitButton=consultForm.querySelector('[type="submit"]');
+ const fields={
+  full_name:document.getElementById('fullName').value,
+  email:document.getElementById('email').value,
+  startup_name:document.getElementById('consultStartup').value,
+  industry:document.getElementById('consultIndustry').value,
+  monthly_budget:document.getElementById('consultBudget').value,
+  preferred_method:document.getElementById('method').value,
+  preferred_date:document.getElementById('date').value,
+  preferred_time:document.getElementById('time').value,
+  challenge:document.getElementById('challenge').value
+ };
+ consultationSubmitting=true;
+ submitButton.disabled=true;
+ submitButton.dataset.i18n='consultation.submit.pending';
+ submitButton.textContent=i18n.t('consultation.submit.pending');
+ consultForm.setAttribute('aria-busy','true');
+ consultationSuccess.classList.remove('show');
+ try{
+  await formSubmissionClient.submit('consultation',fields);
+  consultForm.reset();
+  consultationSuccess.classList.add('show');
+  consultationSuccess.scrollIntoView({behavior:'smooth',block:'nearest'});
+ }catch(error){
+  showSubmissionError(error);
+ }finally{
+  consultationSubmitting=false;
+  submitButton.disabled=false;
+  submitButton.dataset.i18n='consultation.submit';
+  submitButton.textContent=i18n.t('consultation.submit');
+  consultForm.removeAttribute('aria-busy');
+ }
 });
 document.addEventListener('growise:localechange',()=>{
  invalidFields.forEach((key,field)=>field.setCustomValidity(i18n.t(key)));
