@@ -43,7 +43,7 @@ Deno.serve(async (request) => {
     if (request.method === "GET") {
       const { data: profiles, error } = await serviceClient
         .from("growise_profiles")
-        .select("id,username,full_name,student_id,student_status,created_at")
+        .select("id,username,student_status,created_at")
         .neq("username", "admin")
         .order("created_at", { ascending: true })
         .limit(100);
@@ -57,8 +57,6 @@ Deno.serve(async (request) => {
         return {
           id: profile.id,
           username: profile.username,
-          full_name: profile.full_name,
-          student_id: profile.student_id,
           student_status: profile.student_status,
           email: data.user.email,
           created_at: profile.created_at

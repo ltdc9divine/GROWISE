@@ -137,3 +137,23 @@ test("dashboard labels expose anonymous feedback and explicitly avoid login hist
   assert.doesNotMatch(client, /login_count|last_login|sign_in_count/i);
   assert.match(translations, /\["adminDashboard\.anonymous", "Anonymous feedback", "Feedback ẩn danh"\]/);
 });
+
+test("admin profile reads use columns present in the deployed growise_profiles schema", () => {
+  const auth = readFileSync(
+    path.join(__dirname, "..", "js", "supabase-auth.js"),
+    "utf8"
+  );
+  const reviewFunction = readFileSync(
+    path.join(__dirname, "..", "supabase", "functions", "admin-student-review", "index.ts"),
+    "utf8"
+  );
+  const reviewGetHandler = reviewFunction.match(
+    /if \(request\.method === "GET"\) \{[\s\S]*?\n    \}/
+  )?.[0];
+
+  assert.match(auth, /\.from\("growise_profiles"\)\s*\.select\("username,student_status,must_change_password"\)/);
+  assert.ok(reviewGetHandler);
+  assert.match(reviewGetHandler, /\.select\("id,username,student_status,created_at"\)/);
+  assert.doesNotMatch(auth, /\.from\("growise_profiles"\)[\s\S]{0,100}\.select\("[^"]*(?:full_name|student_id)/);
+  assert.doesNotMatch(reviewGetHandler, /full_name|student_id/);
+});

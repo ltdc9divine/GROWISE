@@ -173,7 +173,7 @@
     try {
       const { data: profile, error } = await client
         .from("growise_profiles")
-        .select("username,full_name,student_id,student_status,must_change_password")
+        .select("username,student_status,must_change_password")
         .eq("id", session.user.id)
         .maybeSingle();
       if (revision !== sessionRevision) return null;
