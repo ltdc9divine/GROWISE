@@ -10,7 +10,7 @@ const context = { globalThis: {} };
 vm.runInNewContext(source, context);
 const { normalizeUsername } = context.globalThis.GrowiseUsername;
 vm.runInNewContext(
-  readFileSync(path.join(__dirname, "..", "js", "demo-student-auth.js"), "utf8"),
+  readFileSync(path.join(__dirname, "..", "js", "student-auth.js"), "utf8"),
   context
 );
 
@@ -61,7 +61,7 @@ test("accepts admin only when explicitly allowed", () => {
   assert.equal(normalizeUsername("admin").error, "invalid");
 });
 
-test("student login uses the demo service; admin keeps password login", () => {
+test("student login uses the canonical student service; admin keeps password login", () => {
   const html = readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   const auth = readFileSync(
     path.join(__dirname, "..", "js", "supabase-auth.js"),
@@ -83,7 +83,7 @@ test("student login uses the demo service; admin keeps password login", () => {
   assert.doesNotMatch(auth, /student-otp-login|authStudentOtp|handleStudentOtp/);
   const studentHandler = auth.match(/async function handleStudentLogin\(event\) \{[\s\S]*?\n  \}/)?.[0];
   assert.ok(studentHandler, "demo student login handler exists");
-  assert.match(studentHandler, /await getDemoAuth\(\)\.login/);
+  assert.match(studentHandler, /await getStudentAuth\(\)\.login/);
   assert.doesNotMatch(studentHandler, /client\.auth/);
 
   const studentAccount = html.match(
@@ -95,14 +95,15 @@ test("student login uses the demo service; admin keeps password login", () => {
   assert.match(studentAccount, /authAccountStudentId/);
   assert.doesNotMatch(studentAccount, /email|username|password|phone|birth|address/i);
 
-  const demoClient = readFileSync(
-    path.join(__dirname, "..", "js", "demo-student-auth.js"),
+  const studentClient = readFileSync(
+    path.join(__dirname, "..", "js", "student-auth.js"),
     "utf8"
   );
-  assert.match(demoClient, /functions\/v1\/student-demo-login/);
-  assert.match(demoClient, /growise\.demo\.student-session\.v2/);
-  assert.doesNotMatch(demoClient, /growise\.demo\.students|accounts/);
-  assert.doesNotMatch(demoClient, /SUPABASE_SERVICE_ROLE_KEY|service_role/i);
+  assert.match(studentClient, /functions\/v1\/student-login/);
+  assert.match(studentClient, /growise\.student-session\.v1/);
+  assert.match(studentClient, /growise\.demo\.student-session\.v2/);
+  assert.doesNotMatch(studentClient, /growise_demo_students|growise\.demo\.students/);
+  assert.doesNotMatch(studentClient, /SUPABASE_SERVICE_ROLE_KEY|service_role/i);
 });
 
 test("frontend, database, and Edge Functions share the username regex", () => {
@@ -136,7 +137,7 @@ test("frontend, database, and Edge Functions share the username regex", () => {
     "utf8"
   );
   const otpFunction = readFileSync(
-    path.join(__dirname, "..", "supabase", "functions", "student-otp-login", "index.ts"),
+    path.join(__dirname, "..", "supabase", "archive", "functions", "student-otp-login", "index.ts"),
     "utf8"
   );
   const otpMigration = readFileSync(
@@ -147,12 +148,20 @@ test("frontend, database, and Edge Functions share the username regex", () => {
     path.join(__dirname, "..", "supabase", "functions", "admin-student-review", "index.ts"),
     "utf8"
   );
-  const demoFunction = readFileSync(
-    path.join(__dirname, "..", "supabase", "functions", "student-demo-login", "index.ts"),
+  const legacyDemoFunction = readFileSync(
+    path.join(__dirname, "..", "supabase", "archive", "functions", "student-demo-login", "index.ts"),
     "utf8"
   );
-  const demoMigration = readFileSync(
+  const legacyDemoMigration = readFileSync(
     path.join(__dirname, "..", "supabase", "migrations", "20261031090700_student_demo_students.sql"),
+    "utf8"
+  );
+  const studentFunction = readFileSync(
+    path.join(__dirname, "..", "supabase", "functions", "student-login", "index.ts"),
+    "utf8"
+  );
+  const studentMigration = readFileSync(
+    path.join(__dirname, "..", "supabase", "migrations", "20261031163000_create_growise_users.sql"),
     "utf8"
   );
   const supabaseConfig = readFileSync(
@@ -185,19 +194,26 @@ test("frontend, database, and Edge Functions share the username regex", () => {
   assert.match(adminReviewFunction, /nextStatus !== "rejected"/);
   assert.match(schema, /next_status is distinct from 'rejected'/);
   assert.match(otpMigration, /next_status is distinct from 'rejected'/);
-  assert.match(demoFunction, /normalizeFullName\(body\.full_name\)/);
-  assert.match(demoFunction, /normalizeUsername\(body\.username\)/);
-  assert.match(demoFunction, /\.from\("growise_demo_students"\)/);
-  assert.match(demoFunction, /insertError\?\.code === "23505"/);
-  assert.match(demoFunction, /const racedStudent = await findStudent/);
-  assert.match(demoFunction, /growise_demo_consume_registration_limit/);
-  assert.doesNotMatch(demoFunction, /\.auth\.|growise_profiles|growise_has_role/);
-  assert.match(demoMigration, /create table public\.growise_demo_students/);
-  assert.match(demoMigration, /on public\.growise_demo_students \(lower\(username\)\)/);
-  assert.match(demoMigration, /enable row level security/);
-  assert.match(demoMigration, /revoke all on table public\.growise_demo_students/);
-  assert.match(demoMigration, /to service_role/);
-  assert.match(supabaseConfig, /\[functions\.student-demo-login\]\s+verify_jwt = false/);
+  assert.match(studentFunction, /normalizeFullName\(body\.full_name\)/);
+  assert.match(studentFunction, /normalizeUsername\(body\.username\)/);
+  assert.match(studentFunction, /\.from\("growise_users"\)/);
+  assert.match(studentFunction, /insertError\?\.code === "23505"/);
+  assert.match(studentFunction, /const racedStudent = await findStudent/);
+  assert.match(studentFunction, /growise_consume_student_registration_limit/);
+  assert.doesNotMatch(studentFunction, /\.auth\.|growise_profiles|growise_has_role/);
+  assert.match(studentMigration, /create table public\.growise_users/);
+  assert.match(studentMigration, /on public\.growise_users \(lower\(username\)\)/);
+  assert.match(studentMigration, /enable row level security/);
+  assert.match(studentMigration, /revoke all on table public\.growise_users/);
+  assert.match(studentMigration, /to service_role/);
+  assert.match(studentMigration, /already exists; inspect its schema/);
+  assert.match(studentMigration, /growise_users_set_updated_at/);
+  assert.match(studentMigration, /growise_consume_student_registration_limit/);
+  assert.doesNotMatch(studentMigration, /\b(drop|delete from)\b/i);
+  assert.doesNotMatch(studentMigration, /alter table public\.growise_profiles/i);
+  assert.match(supabaseConfig, /\[functions\.student-login\]\s+verify_jwt = false/);
+  assert.match(legacyDemoFunction, /\.from\("growise_demo_students"\)/);
+  assert.match(legacyDemoMigration, /create table public\.growise_demo_students/);
   assert.match(sharedAuth, /function isAllowedOrigin\(origin: string \| null\)/);
 });
 
@@ -211,11 +227,11 @@ function createMemoryStorage() {
   };
 }
 
-test("demo student login creates and reuses a shared backend profile", async () => {
+test("student login creates and reuses a shared backend profile", async () => {
   const storage = createMemoryStorage();
   const records = new Map();
   const calls = [];
-  const auth = context.globalThis.GrowiseDemoStudentAuth.createAuth(
+  const auth = context.globalThis.GrowiseStudentAuth.createAuth(
     { url: "https://project.supabase.co/", publishableKey: "public-key" },
     {
       storage,
@@ -253,28 +269,28 @@ test("demo student login creates and reuses a shared backend profile", async () 
   });
   assert.equal((await auth.login("Nguyễn Văn Thanh", "THANH-23DH123456")).student_id, account.student_id);
   assert.equal(calls.length, 2);
-  assert.equal(calls[0].url, "https://project.supabase.co/functions/v1/student-demo-login");
+  assert.equal(calls[0].url, "https://project.supabase.co/functions/v1/student-login");
   assert.deepEqual(JSON.parse(calls[0].options.body), {
     full_name: "Nguyễn Văn Thanh",
     username: "thanh-23dh123456"
   });
   assert.equal(storage.has("growise.demo.students.v1"), false);
-  assert.equal(storage.has("growise.demo.student-session.v2"), true);
+  assert.equal(storage.has("growise.student-session.v1"), true);
 
   const beforeRestore = calls.length;
   assert.equal((await auth.restoreSession()).student_id, account.student_id);
   assert.equal(calls.length, beforeRestore + 1);
   auth.signOut();
   assert.equal(await auth.restoreSession(), null);
-  assert.equal(storage.has("growise.demo.student-session.v2"), false);
+  assert.equal(storage.has("growise.student-session.v1"), false);
   assert.equal(records.size, 1);
 });
 
-test("demo rejects name mismatches and invalid usernames without trusting local data", async () => {
+test("student login rejects mismatches and invalid usernames without trusting local data", async () => {
   const storage = createMemoryStorage();
   const records = new Map();
   let calls = 0;
-  const auth = context.globalThis.GrowiseDemoStudentAuth.createAuth(
+  const auth = context.globalThis.GrowiseStudentAuth.createAuth(
     { url: "https://project.supabase.co", publishableKey: "public-key" },
     {
       storage,
@@ -311,4 +327,41 @@ test("demo rejects name mismatches and invalid usernames without trusting local 
   );
   assert.equal(calls, 2);
   assert.equal(records.size, 1);
+});
+
+test("legacy browser session is revalidated and migrated to the canonical key", async () => {
+  const storage = createMemoryStorage();
+  storage.setItem("growise.demo.student-session.v2", JSON.stringify({
+    version: 2,
+    full_name: "Nguyễn Văn Thanh",
+    username: "thanh-23dh123456"
+  }));
+  let requestCount = 0;
+  const auth = context.globalThis.GrowiseStudentAuth.createAuth(
+    { url: "https://project.supabase.co", publishableKey: "public-key" },
+    {
+      storage,
+      async fetch(_url, options) {
+        requestCount += 1;
+        const identity = JSON.parse(options.body);
+        return {
+          ok: true,
+          async json() {
+            return {
+              success: true,
+              created: false,
+              full_name: identity.full_name,
+              student_id: identity.username.split("-")[1]
+            };
+          }
+        };
+      }
+    }
+  );
+
+  const restored = await auth.restoreSession();
+  assert.equal(restored.full_name, "Nguyễn Văn Thanh");
+  assert.equal(requestCount, 1);
+  assert.equal(storage.has("growise.student-session.v1"), true);
+  assert.equal(storage.has("growise.demo.student-session.v2"), false);
 });

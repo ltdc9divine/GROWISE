@@ -10,6 +10,11 @@ import {
 
 const usernamePattern = /^[a-z]+-[a-z0-9]+$/;
 
+type StudentProfile = {
+  full_name: string;
+  student_id: string;
+};
+
 function normalizeFullName(value: string): string {
   return value.normalize("NFC").trim().replace(/\s+/gu, " ");
 }
@@ -25,8 +30,7 @@ function namesMatch(left: string, right: string): boolean {
 
 function getClientAddress(request: Request): string {
   const cloudflareAddress = request.headers.get("cf-connecting-ip")?.trim();
-  const forwardedAddresses = request.headers.get("x-forwarded-for");
-  const forwardedAddress = forwardedAddresses
+  const forwardedAddress = request.headers.get("x-forwarded-for")
     ?.split(",")
     .map((address) => address.trim())
     .filter(Boolean)
@@ -48,14 +52,9 @@ async function hashClientAddress(address: string): Promise<string> {
     .join("");
 }
 
-type DemoStudent = {
-  full_name: string;
-  student_id: string;
-};
-
-async function findStudent(client: ReturnType<typeof createServiceClient>, username: string) {
-  const { data, error } = await client
-    .from("growise_demo_students")
+async function findStudent(username: string): Promise<StudentProfile | null> {
+  const { data, error } = await createServiceClient()
+    .from("growise_users")
     .select("full_name,student_id")
     .eq("username", username)
     .maybeSingle();
@@ -67,11 +66,7 @@ async function findStudent(client: ReturnType<typeof createServiceClient>, usern
   ) {
     throw new RequestError(503, "student_lookup_unavailable");
   }
-  const student: DemoStudent = {
-    full_name: data.full_name,
-    student_id: data.student_id
-  };
-  return student;
+  return { full_name: data.full_name, student_id: data.student_id };
 }
 
 function rejectNameMismatch(): never {
@@ -117,8 +112,7 @@ Deno.serve(async (request) => {
     }
     const studentId = username.split("-")[1];
 
-    const serviceClient = createServiceClient();
-    const existing = await findStudent(serviceClient, username);
+    const existing = await findStudent(username);
     if (existing) {
       if (!namesMatch(existing.full_name, fullName)) rejectNameMismatch();
       return jsonResponse(request, {
@@ -129,26 +123,22 @@ Deno.serve(async (request) => {
       });
     }
 
-    const clientHash = await hashClientAddress(getClientAddress(request));
+    const serviceClient = createServiceClient();
     const { data: allowed, error: limitError } = await serviceClient.rpc(
-      "growise_demo_consume_registration_limit",
-      { submitted_client_hash: clientHash }
+      "growise_consume_student_registration_limit",
+      { submitted_client_hash: await hashClientAddress(getClientAddress(request)) }
     );
     if (limitError) throw new RequestError(503, "rate_limit_unavailable");
     if (allowed !== true) throw new RequestError(429, "rate_limited");
 
     const { data: createdStudent, error: insertError } = await serviceClient
-      .from("growise_demo_students")
-      .insert({
-        full_name: fullName,
-        username,
-        student_id: studentId
-      })
+      .from("growise_users")
+      .insert({ full_name: fullName, username, student_id: studentId })
       .select("full_name,student_id")
       .single();
 
     if (insertError?.code === "23505") {
-      const racedStudent = await findStudent(serviceClient, username);
+      const racedStudent = await findStudent(username);
       if (!racedStudent) throw new RequestError(503, "student_lookup_unavailable");
       if (!namesMatch(racedStudent.full_name, fullName)) rejectNameMismatch();
       return jsonResponse(request, {

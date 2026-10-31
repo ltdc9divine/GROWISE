@@ -1,3 +1,4 @@
+// Archived legacy endpoint. This OTP flow is not used by the current frontend.
 import {
   createPublicClient,
   createServiceClient,
@@ -6,7 +7,7 @@ import {
   jsonResponse,
   readJson,
   RequestError
-} from "../_shared/auth.ts";
+} from "../../functions/_shared/auth.ts";
 
 const usernamePattern = /^[a-z]+-[a-z0-9]+$/;
 const otpPattern = /^[a-z0-9]{4,12}$/i;

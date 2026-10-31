@@ -196,35 +196,31 @@ At the username-refactor continuation, `git status --short` also showed new untr
 
 ## 12. Supabase authentication: implementation state and handoff
 
-### Owner's current requirements
+### Current implementation
 
-- Keep the plain HTML/CSS/JavaScript architecture and all seven existing public hash routes.
-- Student login asks only for full name and username. A valid new username creates a demo profile in the shared Supabase Database; an existing username requires the same normalized full name.
-- Username normalization is trim + lowercase with the shared `^[a-z]+-[a-z0-9]+$` rule; `admin` is reserved. Full names preserve Vietnamese diacritics and normalize whitespace. Demo MSSV is the portion after the hyphen.
-- The database is shared by localhost and Vercel. Browser `localStorage` stores only the name/username needed for a temporary UI session, and every restored session is revalidated by the backend.
-- Student account details after login show only demo full name and student ID.
-- Admin retains username/password sign-in, role checks, forced-password-change behavior, and student management.
-- No production database migration, function deployment, commit, push, or deployment is authorized by this task.
+- The active student flow sends only `full_name` and `username` to `student-login`, which writes to `public.growise_users`. MSSV is derived server-side. Username format is `^[a-z]+-[a-z0-9]+$`; names preserve Vietnamese diacritics and normalize whitespace.
+- [`../js/student-auth.js`](../js/student-auth.js) stores only a temporary UI identity in localStorage. Every restored session is rechecked with the backend. It migrates the former session key after successful verification; local data is not treated as authentication proof.
+- [`../supabase/migrations/20261031163000_create_growise_users.sql`](../supabase/migrations/20261031163000_create_growise_users.sql) is applied to GROWISE project `oqyibynbowpegjjaigoz`. It creates an unlinked, RLS-enabled table, case-insensitive username index, timestamp trigger, service-only grants, and rate-limit RPC wrapper. It performs no DDL or data changes to admin objects.
+- [`../supabase/functions/student-login/index.ts`](../supabase/functions/student-login/index.ts) is ACTIVE at version 2, `verify_jwt=false`. It validates inputs, handles SQLSTATE `23505` races, and rate-limits new rows. It creates no Auth user/session or student/admin role.
+- Vercel Preview [`growise-p9w5vow3d-ltdc9divine-5816s-projects.vercel.app`](https://growise-p9w5vow3d-ltdc9divine-5816s-projects.vercel.app) is READY and protected by deployment access. Production was not deployed.
+- The previous `public.growise_demo_students` table has 2 rows and remains untouched. `student-demo-login` is still ACTIVE in Supabase but its source is archived and the frontend no longer calls it. Do not drop either production object until their dependencies and a backup/rollback plan have been reviewed.
+- OTP source is retained under [`../supabase/archive/`](../supabase/archive/); migration history files are retained unchanged. `20261031` username-format and `20261101` OTP migrations remain pending and were not applied.
+- Admin `growise_profiles`, private roles, `username-login`, `admin-student-review`, and `change-password` were not altered or redeployed as part of this refactor.
 
-### Current implementation in progress
+### Production inventory and outstanding audit
 
-- Current working branch is `feature/student-otp-login`, based on `fed03c8`; the worktree has uncommitted changes. Preserve unrelated work and do not commit/push.
-- [`../js/supabase-auth.js`](../js/supabase-auth.js), [`../js/username.js`](../js/username.js), [`../js/demo-student-auth.js`](../js/demo-student-auth.js), and [`../js/translations.js`](../js/translations.js) implement server-backed name/username demo login, preserve the separate administrator password path, and restrict student display to full name and the database student ID.
-- [`../supabase/migrations/20261031090700_student_demo_students.sql`](../supabase/migrations/20261031090700_student_demo_students.sql) creates the RLS-protected demo table, case-insensitive unique username index, and database-backed registration rate limit. It was applied to Supabase project `oqyibynbowpegjjaigoz`; only its unique migration version was recorded as applied. The older `20261031` username-format and `20261101` OTP migrations remain pending and were not applied.
-- [`../supabase/functions/student-demo-login/index.ts`](../supabase/functions/student-demo-login/index.ts) implements the public demo endpoint with strict input validation, mismatch rejection, race handling for SQLSTATE `23505`, and registration throttling. It is ACTIVE as version 2 with `verify_jwt=false`.
-- Vercel Preview `https://growise-2o8ylhod6-ltdc9divine-5816s-projects.vercel.app` is READY, with deployment protection enabled. Local browser login/revalidation and synthetic API create/reuse/mismatch/invalid-input checks passed. Interactive browser testing of Preview was blocked by the protection screen; the deployed HTML was verified through authenticated Vercel CLI access.
-- Student demo sign-in does not call `student-otp-login`, send email, create Supabase Auth users/sessions, or assign Supabase roles. The old OTP Edge Function/migration remain in the repository but are unused by this frontend.
-- [`../supabase/functions/username-login/index.ts`](../supabase/functions/username-login/index.ts) is restricted to the administrator account and trusted admin role.
-- [`../supabase/functions/admin-student-review/index.ts`](../supabase/functions/admin-student-review/index.ts) remains admin-only and continues to manage `growise_profiles`; it does not provision demo profiles.
-- [`../supabase/migrations/20261101_student_otp_login.sql`](../supabase/migrations/20261101_student_otp_login.sql) remains unused by the current demo student flow and must not be applied for it.
-- [`../tests/username.test.js`](../tests/username.test.js) covers normalization, mocked service-backed creation/reuse, mismatch rejection, backend session revalidation/sign-out, migration security properties, and admin separation. [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md) documents the migration, Edge Function secrets, CORS allowlist, and administrator setup.
+- Confirmed objects: `public.growise_profiles` (RLS enabled, authenticated SELECT grant), `growise_private.user_roles` (RLS enabled), `growise_private.username_migration_20261031`, `public.growise_demo_students` (2 rows), `growise_private.growise_demo_registration_limits`, and its RPC.
+- `public.growise_users` was absent before the new migration; it is now created and accessible only to `service_role` through direct grants.
+- Migration history: `20261031090700` and `20261031163000` are applied. Legacy `20261031` and `20261101` remain pending. Do not use `db push` while those unrelated migrations are pending.
+- Full trigger/policy/dependency catalog inspection was not completed because CLI temporary-role database login failed. No legacy tables, functions, triggers, policies, or user data were removed. The two synthetic rows created in `growise_users` for live verification were deleted using exact username and full-name matches. Before any legacy cleanup, obtain a verified backup and complete the dependency inventory.
+- Name + username is not identity authentication. Do not use this flow for private academic data or admin operations. The service-role key stays only in Supabase Edge Function Secrets.
 
-### Security and verification limits
+### Verification
 
-- The service-role key is not added to browser code. RLS is enabled and direct `anon`/`authenticated` table privileges are revoked. The rate-limit RPC is restricted to `service_role`.
-- A name/username pair is not authentication. Demo data must not be used to protect personal or learning data. Do not grant the demo a Supabase role or pass its identity to admin endpoints.
-- Local JavaScript tests, SQL migration execution, synthetic function requests, local browser login/revalidation, exact CORS preflights, and direct publishable-key denial were verified. Admin end-to-end behavior remains untested. Vercel Preview is protected, so its interactive login flow was not verified in the browser. Direct database RLS introspection timed out with a temporary-role password error.
-- Do not apply the legacy [`../supabase/migrations/20261101_student_otp_login.sql`](../supabase/migrations/20261101_student_otp_login.sql) or claim the database flow is live until the demo migration and function have been verified against the project.
+- 9 Node tests pass, including mocked create/reuse, mismatch/invalid input, local-session revalidation, migration safeguards, and admin separation.
+- Live synthetic requests to `student-login`: create returned 200/`created:true`; repeat returned 200/`created:false`; mismatched name returned 409; invalid username returned 400.
+- Direct REST read of `growise_users` with publishable key returned 401. Preview and localhost/Production/Preview CORS preflights passed; an unlisted origin returned 403.
+- Local browser login and backend-validated restore were tested against the previous client build. The refactored local UI still needs browser verification after the latest asset rename; admin end-to-end testing remains unverified. Preview is protected and interactive browser sign-in has not been tested there.
 
 ### Configuration and secrets
 
@@ -240,12 +236,11 @@ No service-role key or account credentials are present. Supabase Dashboard setup
 
 ### Setup and verification plan
 
-1. Review live Supabase project identity, existing schema, RLS, grants, triggers, and function versions; do not assume earlier owner reports reflect current deployment.
-2. Review migration `20261031090700_student_demo_students.sql` and the new Edge Function before applying/deploying them. Never apply the unrelated legacy migrations as part of this demo flow.
-3. Keep existing administrator Supabase Email settings, recovery, exact redirects, and allowed origins configured as required by the admin flow.
-4. Configure Edge Function secrets only in the Supabase secret store and deploy the functions only after review and approval.
-5. Test new profile creation, matching-name reuse, mismatch rejection, concurrent unique-username requests, session revalidation/sign-out, and confirm no Supabase session/role is created; separately test admin login and management.
-6. Configure exact local, production, and actual Preview origins in `GROWISE_ALLOWED_ORIGINS`, then test localhost and Vercel Preview against the same profile. Re-test all public routes, VI/EN, planner/resources/forms, responsive widths, JavaScript syntax, and `git diff --check`.
+1. Finish catalog/dependency inspection and test admin login before proposing any cleanup.
+2. Keep legacy database objects and migration files until a separately reviewed backup/rollback plan is approved.
+3. Keep `GROWISE_ALLOWED_ORIGINS` exact; each new Vercel preview hostname must be allowlisted if used for browser testing.
+4. Verify the refactored localhost and protected Preview UI, locale switching, all public routes, responsive widths, JavaScript syntax, and `git diff --check`.
+5. Do not apply pending username/OTP migrations, drop legacy objects, deploy Vercel Production, commit, or push without explicit authorization.
 
 ## 13. Continuing development and verification checklist
 

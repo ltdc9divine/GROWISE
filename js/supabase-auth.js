@@ -16,12 +16,12 @@
   const config = window.GROWISE_SUPABASE_CONFIG;
   const sdk = window.supabase;
   const usernames = window.GrowiseUsername;
-  const demoStudentAuth = window.GrowiseDemoStudentAuth;
+  const studentAuth = window.GrowiseStudentAuth;
   const minimumPasswordLength = 8;
   let client = null;
-  let demoAuth = null;
+  let studentAuthClient = null;
   let studentLoginInFlight = false;
-  let currentDemoStudent = null;
+  let currentStudent = null;
   let currentSession = null;
   let currentProfile = null;
   let currentAccountRole = null;
@@ -56,7 +56,7 @@
 
   function setNavigationLabel() {
     openButton.textContent = i18n.t(
-      currentSession || currentDemoStudent ? "auth.nav.account" : navLabelKey
+      currentSession || currentStudent ? "auth.nav.account" : navLabelKey
     );
   }
 
@@ -73,13 +73,13 @@
     );
   }
 
-  function getDemoAuth() {
-    if (!demoAuth) demoAuth = demoStudentAuth.createAuth(config);
-    return demoAuth;
+  function getStudentAuth() {
+    if (!studentAuthClient) studentAuthClient = studentAuth.createAuth(config);
+    return studentAuthClient;
   }
 
-  function renderDemoStudentAccount(student) {
-    currentDemoStudent = student;
+  function renderStudentAccount(student) {
+    currentStudent = student;
     currentProfile = null;
     currentAccountRole = null;
     document.getElementById("authAdminAccountView").hidden = true;
@@ -89,7 +89,7 @@
     setNavigationLabel();
   }
 
-  function demoLoginErrorKey(error) {
+  function studentLoginErrorKey(error) {
     return {
       full_name_required: "auth.message.fullNameRequired",
       username_required: "auth.message.usernameRequired",
@@ -99,8 +99,8 @@
       rate_limited: "auth.message.rateLimited",
       service_unavailable: "auth.message.serviceUnavailable",
       network_error: "auth.message.networkError",
-      storage_unavailable: "auth.message.demoStorageUnavailable",
-      storage_invalid: "auth.message.demoStorageInvalid"
+      storage_unavailable: "auth.message.sessionStorageUnavailable",
+      storage_invalid: "auth.message.sessionStorageInvalid"
     }[error?.code] || "auth.message.genericError";
   }
 
@@ -110,12 +110,12 @@
     if (demoSessionRestoreStarted || currentSession) return;
     demoSessionRestoreStarted = true;
     try {
-      const restoredStudent = await getDemoAuth().restoreSession();
+      const restoredStudent = await getStudentAuth().restoreSession();
       if (restoredStudent && !currentSession) {
-        renderDemoStudentAccount(restoredStudent);
+        renderStudentAccount(restoredStudent);
       }
     } catch (error) {
-      setStatus(demoLoginErrorKey(error), "error");
+      setStatus(studentLoginErrorKey(error), "error");
     }
   }
 
@@ -192,11 +192,11 @@
       }
 
       if (isAdmin) {
-        currentDemoStudent = null;
+        currentStudent = null;
         try {
-          getDemoAuth().signOut();
+          getStudentAuth().signOut();
         } catch (error) {
-          setStatus(demoLoginErrorKey(error), "error");
+          setStatus(studentLoginErrorKey(error), "error");
         }
         currentAccountRole = "admin";
         document.getElementById("authAdminAccountView").hidden = false;
@@ -222,7 +222,7 @@
         return true;
       }
 
-      setStatus("auth.message.useStudentDemoLogin", "error");
+      setStatus("auth.message.useStudentLogin", "error");
       await client.auth.signOut({ scope: "local" });
       if (revision !== sessionRevision) return null;
       currentSession = null;
@@ -420,18 +420,18 @@
     }
     studentLoginInFlight = true;
     submit.disabled = true;
-    setStatus("auth.message.demoChecking");
+    setStatus("auth.message.studentChecking");
     try {
-      const student = await getDemoAuth().login(
+      const student = await getStudentAuth().login(
         form.elements.full_name.value,
         form.elements.username.value
       );
-      renderDemoStudentAccount(student);
+      renderStudentAccount(student);
       form.reset();
       if (modal.classList.contains("open")) setView("account");
       setStatus("auth.message.loginSuccess");
     } catch (error) {
-      setStatus(demoLoginErrorKey(error), "error");
+      setStatus(studentLoginErrorKey(error), "error");
     } finally {
       studentLoginInFlight = false;
       submit.disabled = false;
@@ -612,8 +612,8 @@
           return;
         }
       }
-      if (currentDemoStudent) getDemoAuth().signOut();
-      currentDemoStudent = null;
+      if (currentStudent) getStudentAuth().signOut();
+      currentStudent = null;
       currentSession = null;
       sessionRevision += 1;
       currentProfile = null;
@@ -669,9 +669,9 @@
     if (currentSession) {
       openModal("account");
       loadProfile(currentSession);
-    } else if (currentDemoStudent) {
+    } else if (currentStudent) {
       openModal("account");
-      renderDemoStudentAccount(currentDemoStudent);
+      renderStudentAccount(currentStudent);
       setView("account");
     } else {
       openModal("studentLogin");

@@ -1,10 +1,11 @@
 (function (root) {
-  const sessionStorageKey = "growise.demo.student-session.v2";
+  const sessionStorageKey = "growise.student-session.v1";
+  const legacySessionStorageKey = "growise.demo.student-session.v2";
 
-  class DemoStudentAuthError extends Error {
+  class StudentAuthError extends Error {
     constructor(code) {
       super(code);
-      this.name = "DemoStudentAuthError";
+      this.name = "StudentAuthError";
       this.code = code;
     }
   }
@@ -15,26 +16,26 @@
       try {
         return root.localStorage;
       } catch {
-        throw new DemoStudentAuthError("storage_unavailable");
+        throw new StudentAuthError("storage_unavailable");
       }
     })();
     const fetcher = options.fetch || root.fetch?.bind(root);
     const endpoint = typeof config?.url === "string" && config.url
-      ? `${config.url.replace(/\/+$/, "")}/functions/v1/student-demo-login`
+      ? `${config.url.replace(/\/+$/, "")}/functions/v1/student-login`
       : null;
 
     function normalizeInput(rawFullName, rawUsername) {
       const fullName = usernames.normalizeFullName(rawFullName);
-      if (!fullName) throw new DemoStudentAuthError("full_name_required");
+      if (!fullName) throw new StudentAuthError("full_name_required");
       if (typeof rawUsername !== "string" || !rawUsername.trim()) {
-        throw new DemoStudentAuthError("username_required");
+        throw new StudentAuthError("username_required");
       }
       if (fullName.length > 200) {
-        throw new DemoStudentAuthError("invalid_full_name");
+        throw new StudentAuthError("invalid_full_name");
       }
       const normalized = usernames.normalizeUsername(rawUsername);
       if (!normalized.username || normalized.username.length > 64) {
-        throw new DemoStudentAuthError("invalid_username");
+        throw new StudentAuthError("invalid_username");
       }
       return { full_name: fullName, username: normalized.username };
     }
@@ -43,8 +44,11 @@
       let serialized;
       try {
         serialized = storage.getItem(sessionStorageKey);
+        if (serialized === null) {
+          serialized = storage.getItem(legacySessionStorageKey);
+        }
       } catch {
-        throw new DemoStudentAuthError("storage_unavailable");
+        throw new StudentAuthError("storage_unavailable");
       }
       if (serialized === null) return null;
 
@@ -52,15 +56,15 @@
       try {
         session = JSON.parse(serialized);
       } catch {
-        throw new DemoStudentAuthError("storage_invalid");
+        throw new StudentAuthError("storage_invalid");
       }
       if (
         !session
-        || session.version !== 2
+        || ![1, 2].includes(session.version)
         || typeof session.full_name !== "string"
         || typeof session.username !== "string"
       ) {
-        throw new DemoStudentAuthError("storage_invalid");
+        throw new StudentAuthError("storage_invalid");
       }
       return normalizeInput(session.full_name, session.username);
     }
@@ -68,17 +72,17 @@
     function saveSession(identity) {
       try {
         storage.setItem(sessionStorageKey, JSON.stringify({
-          version: 2,
+          version: 1,
           ...identity
         }));
       } catch {
-        throw new DemoStudentAuthError("storage_unavailable");
+        throw new StudentAuthError("storage_unavailable");
       }
     }
 
     async function verifyWithBackend(identity) {
       if (!endpoint || !config?.publishableKey || !fetcher) {
-        throw new DemoStudentAuthError("service_unavailable");
+        throw new StudentAuthError("service_unavailable");
       }
 
       let response;
@@ -92,33 +96,33 @@
           body: JSON.stringify(identity)
         });
       } catch {
-        throw new DemoStudentAuthError("network_error");
+        throw new StudentAuthError("network_error");
       }
 
       let result;
       try {
         result = await response.json();
       } catch {
-        throw new DemoStudentAuthError("service_unavailable");
+        throw new StudentAuthError("service_unavailable");
       }
       if (!response.ok) {
         const code = typeof result?.error === "string" ? result.error : "";
         if (code === "identity_mismatch") {
-          throw new DemoStudentAuthError("identity_mismatch");
+          throw new StudentAuthError("identity_mismatch");
         }
         if (code === "rate_limited") {
-          throw new DemoStudentAuthError("rate_limited");
+          throw new StudentAuthError("rate_limited");
         }
         if (code === "invalid_full_name") {
-          throw new DemoStudentAuthError("invalid_full_name");
+          throw new StudentAuthError("invalid_full_name");
         }
         if (code === "invalid_username") {
-          throw new DemoStudentAuthError("invalid_username");
+          throw new StudentAuthError("invalid_username");
         }
         if (code === "invalid_request") {
-          throw new DemoStudentAuthError("invalid_request");
+          throw new StudentAuthError("invalid_request");
         }
-        throw new DemoStudentAuthError("service_unavailable");
+        throw new StudentAuthError("service_unavailable");
       }
 
       if (
@@ -128,7 +132,7 @@
         || typeof result.student_id !== "string"
         || result.student_id !== identity.username.split("-")[1]
       ) {
-        throw new DemoStudentAuthError("service_unavailable");
+        throw new StudentAuthError("service_unavailable");
       }
 
       return {
@@ -149,7 +153,14 @@
       const identity = readSession();
       if (!identity) return null;
       try {
-        return await verifyWithBackend(identity);
+        const student = await verifyWithBackend(identity);
+        saveSession(identity);
+        try {
+          storage.removeItem(legacySessionStorageKey);
+        } catch {
+          throw new StudentAuthError("storage_unavailable");
+        }
+        return student;
       } catch (error) {
         if (
           error?.code === "identity_mismatch"
@@ -165,16 +176,17 @@
     function signOut() {
       try {
         storage.removeItem(sessionStorageKey);
+        storage.removeItem(legacySessionStorageKey);
       } catch {
-        throw new DemoStudentAuthError("storage_unavailable");
+        throw new StudentAuthError("storage_unavailable");
       }
     }
 
     return Object.freeze({ login, restoreSession, signOut });
   }
 
-  root.GrowiseDemoStudentAuth = Object.freeze({
-    DemoStudentAuthError,
+  root.GrowiseStudentAuth = Object.freeze({
+    StudentAuthError,
     createAuth
   });
 })(globalThis);

@@ -3526,7 +3526,7 @@ textarea:focus-visible {
   border-left-color: #9B3D2F;
 }
 
-.auth-demo-notice {
+.auth-student-notice {
   margin: 12px 0 0;
   color: var(--muted);
   font-size: 12px;
