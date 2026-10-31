@@ -6,8 +6,8 @@
   const statusElement = document.getElementById("authStatus");
   const navLabelKey = "auth.nav.signIn";
   const views = {
-    login: document.getElementById("authLoginView"),
-    register: document.getElementById("authRegisterView"),
+    studentLogin: document.getElementById("authStudentLoginView"),
+    adminLogin: document.getElementById("authAdminLoginView"),
     forgot: document.getElementById("authForgotView"),
     reset: document.getElementById("authResetView"),
     account: document.getElementById("authAccountView")
@@ -16,10 +16,15 @@
   const config = window.GROWISE_SUPABASE_CONFIG;
   const sdk = window.supabase;
   const usernames = window.GrowiseUsername;
+  const demoStudentAuth = window.GrowiseDemoStudentAuth;
   const minimumPasswordLength = 8;
   let client = null;
+  let demoAuth = null;
+  let studentLoginInFlight = false;
+  let currentDemoStudent = null;
   let currentSession = null;
   let currentProfile = null;
+  let currentAccountRole = null;
   let pendingStudents = [];
   let sessionRevision = 0;
   let statusMessage = null;
@@ -50,7 +55,9 @@
   }
 
   function setNavigationLabel() {
-    openButton.textContent = i18n.t(currentSession ? "auth.nav.account" : navLabelKey);
+    openButton.textContent = i18n.t(
+      currentSession || currentDemoStudent ? "auth.nav.account" : navLabelKey
+    );
   }
 
   function normalizeLoginUsername(value) {
@@ -66,17 +73,68 @@
     );
   }
 
+  function getDemoAuth() {
+    if (!demoAuth) demoAuth = demoStudentAuth.createAuth(config);
+    return demoAuth;
+  }
+
+  function renderDemoStudentAccount(student) {
+    currentDemoStudent = student;
+    currentProfile = null;
+    currentAccountRole = null;
+    document.getElementById("authAdminAccountView").hidden = true;
+    document.getElementById("authStudentAccountView").hidden = false;
+    document.getElementById("authAccountFullName").textContent = student.full_name;
+    document.getElementById("authAccountStudentId").textContent = student.student_id;
+    setNavigationLabel();
+  }
+
+  function demoLoginErrorKey(error) {
+    return {
+      full_name_required: "auth.message.fullNameRequired",
+      username_required: "auth.message.usernameRequired",
+      invalid_username: "auth.message.invalidUsername",
+      invalid_full_name: "auth.message.invalidFullName",
+      identity_mismatch: "auth.message.identityMismatch",
+      rate_limited: "auth.message.rateLimited",
+      service_unavailable: "auth.message.serviceUnavailable",
+      network_error: "auth.message.networkError",
+      storage_unavailable: "auth.message.demoStorageUnavailable",
+      storage_invalid: "auth.message.demoStorageInvalid"
+    }[error?.code] || "auth.message.genericError";
+  }
+
+  let demoSessionRestoreStarted = false;
+
+  async function restoreDemoStudentSession() {
+    if (demoSessionRestoreStarted || currentSession) return;
+    demoSessionRestoreStarted = true;
+    try {
+      const restoredStudent = await getDemoAuth().restoreSession();
+      if (restoredStudent && !currentSession) {
+        renderDemoStudentAccount(restoredStudent);
+      }
+    } catch (error) {
+      setStatus(demoLoginErrorKey(error), "error");
+    }
+  }
+
   function isNetworkFailure(error) {
     return error instanceof TypeError
       || error?.name === "AuthRetryableFetchError"
       || error?.name === "FetchError";
   }
 
-  function openModal(initialView = "login") {
+  function openModal(initialView = "studentLogin") {
     previousFocus = document.activeElement;
     modal.classList.add("open");
     setView(initialView);
-    if (!isConfigured()) setStatus("auth.message.configMissing", "error");
+    if (
+      ["adminLogin", "forgot", "reset"].includes(initialView)
+      && !isConfigured()
+    ) {
+      setStatus("auth.message.configMissing", "error");
+    }
     document.getElementById("authTitle").focus();
   }
 
@@ -101,78 +159,82 @@
     const revision = ++sessionRevision;
     currentSession = session;
     currentProfile = null;
+    currentAccountRole = null;
     setNavigationLabel();
     pendingStudents = [];
     document.getElementById("authAdminPanel").hidden = true;
     document.getElementById("authAdminStudents").replaceChildren();
-    if (!session?.user || !client) {
-      return;
-    }
+    document.getElementById("authStudentAccountView").hidden = true;
+    document.getElementById("authAdminAccountView").hidden = true;
+    if (!session?.user || !client) return false;
 
     try {
       const { data: profile, error } = await client
         .from("growise_profiles")
-        .select("username,student_status,must_change_password")
+        .select("username,full_name,student_id,student_status,must_change_password")
         .eq("id", session.user.id)
         .maybeSingle();
-      if (revision !== sessionRevision) return;
-      if (error) {
+      if (revision !== sessionRevision) return null;
+      if (error || !profile) {
         setStatus("auth.message.genericError", "error");
-        return;
+        return false;
       }
       currentProfile = profile;
-      document.getElementById("authAccountEmail").textContent = session.user.email || "";
-      document.getElementById("authAccountUsername").textContent = profile?.username || "—";
-      const statusKey = {
-        pending: "auth.status.pending",
-        verified: "auth.status.verified",
-        rejected: "auth.status.rejected",
-        not_applicable: "auth.status.notApplicable"
-      }[profile?.student_status];
-      document.getElementById("authAccountStatus").textContent = statusKey
-        ? i18n.t(statusKey)
-        : i18n.t("auth.message.genericError");
 
-      if (!profile) {
-        setStatus("auth.message.genericError", "error");
-        return;
-      }
-      if (recoveryFlow) {
-        if (modal.classList.contains("open")) {
-          setView("reset");
-        } else {
-          openModal("reset");
-        }
-        return;
-      }
-
-      const { data: isAdmin, error: roleError } = await client.rpc(
+      const { data: isAdmin, error: adminRoleError } = await client.rpc(
         "growise_has_role",
         { requested_role: "admin" }
       );
-      if (revision !== sessionRevision) return;
-      if (roleError) {
-        document.getElementById("authAdminPanel").hidden = true;
-        pendingStudents = [];
-        document.getElementById("authAdminStudents").replaceChildren();
+      if (revision !== sessionRevision) return null;
+      if (adminRoleError) {
         setStatus("auth.message.genericError", "error");
-        return;
+        return false;
       }
-      const adminPanel = document.getElementById("authAdminPanel");
-      adminPanel.hidden = !isAdmin || profile.must_change_password;
-      if (modal.classList.contains("open")) {
-        setView("account");
+
+      if (isAdmin) {
+        currentDemoStudent = null;
+        try {
+          getDemoAuth().signOut();
+        } catch (error) {
+          setStatus(demoLoginErrorKey(error), "error");
+        }
+        currentAccountRole = "admin";
+        document.getElementById("authAdminAccountView").hidden = false;
+        document.getElementById("authAccountEmail").textContent = session.user.email || "";
+        document.getElementById("authAccountUsername").textContent = profile.username;
+        const statusKey = {
+          pending: "auth.status.pending",
+          verified: "auth.status.verified",
+          rejected: "auth.status.rejected",
+          not_applicable: "auth.status.notApplicable"
+        }[profile.student_status];
+        document.getElementById("authAccountStatus").textContent = statusKey
+          ? i18n.t(statusKey)
+          : i18n.t("auth.message.genericError");
+        document.getElementById("authAdminPanel").hidden = profile.must_change_password;
+        if (recoveryFlow) {
+          if (modal.classList.contains("open")) setView("reset");
+          else openModal("reset");
+          return true;
+        }
+        if (modal.classList.contains("open")) setView("account");
+        if (!profile.must_change_password) await loadPendingStudents(revision);
+        return true;
       }
-      if (isAdmin && !profile.must_change_password) {
-        await loadPendingStudents(revision);
-      } else {
-        pendingStudents = [];
-        document.getElementById("authAdminStudents").replaceChildren();
-      }
+
+      setStatus("auth.message.useStudentDemoLogin", "error");
+      await client.auth.signOut({ scope: "local" });
+      if (revision !== sessionRevision) return null;
+      currentSession = null;
+      currentProfile = null;
+      setNavigationLabel();
+      return false;
     } catch (error) {
       if (revision === sessionRevision) {
         setStatus("auth.message.genericError", "error");
+        return false;
       }
+      return null;
     }
   }
 
@@ -208,20 +270,72 @@
       username.textContent = student.username;
       const email = document.createElement("span");
       email.textContent = student.email;
+      const statusKey = {
+        pending: "auth.status.pending",
+        verified: "auth.status.verified",
+        rejected: "auth.status.rejected"
+      }[student.student_status];
+      const status = document.createElement("span");
+      status.textContent = statusKey ? i18n.t(statusKey) : "";
+      item.append(username, email, status);
+
+      const needsProvision = student.student_status !== "verified"
+        || !student.full_name
+        || !student.student_id;
+      if (!needsProvision) {
+        const fullName = document.createElement("span");
+        fullName.textContent = student.full_name || "";
+        const studentId = document.createElement("span");
+        studentId.textContent = student.student_id || "";
+        item.append(fullName, studentId);
+      }
+
       const actions = document.createElement("div");
       actions.className = "auth-admin-student-actions";
-      [
-        ["verified", "auth.admin.approve"],
-        ["rejected", "auth.admin.reject"]
-      ].forEach(([status, key]) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.dataset.userId = student.id;
-        button.dataset.status = status;
-        button.textContent = i18n.t(key);
-        actions.append(button);
-      });
-      item.append(username, email, actions);
+      if (needsProvision) {
+        const provisionForm = document.createElement("form");
+        provisionForm.className = "auth-form";
+        provisionForm.dataset.userId = student.id;
+        [
+          ["full_name", "auth.student.fullName", student.full_name || "", 200],
+          ["student_id", "auth.student.studentId", student.student_id || "", 64],
+          ["username", "auth.student.username", student.username, 64]
+        ].forEach(([name, labelKey, value, maxLength]) => {
+          const field = document.createElement("div");
+          field.className = "field";
+          const label = document.createElement("label");
+          const input = document.createElement("input");
+          input.name = name;
+          input.value = value;
+          input.maxLength = maxLength;
+          input.required = true;
+          input.autocomplete = "off";
+          label.htmlFor = `legacy-${name}-${student.id}`;
+          label.textContent = i18n.t(labelKey);
+          input.id = label.htmlFor;
+          field.append(label, input);
+          provisionForm.append(field);
+        });
+        const provisionButton = document.createElement("button");
+        provisionButton.type = "submit";
+        provisionButton.className = "btn btn-primary";
+        provisionButton.textContent = i18n.t(
+          student.student_status === "rejected"
+            ? "auth.admin.reactivate"
+            : "auth.admin.completeProvision"
+        );
+        provisionForm.append(provisionButton);
+        item.append(provisionForm);
+      }
+      if (student.student_status !== "rejected") {
+        const lockButton = document.createElement("button");
+        lockButton.type = "button";
+        lockButton.dataset.userId = student.id;
+        lockButton.dataset.status = "rejected";
+        lockButton.textContent = i18n.t("auth.admin.reject");
+        actions.append(lockButton);
+      }
+      if (actions.childElementCount) item.append(actions);
       container.append(item);
     });
   }
@@ -249,7 +363,7 @@
     }
   }
 
-  async function handleLogin(event) {
+  async function handleAdminLogin(event) {
     event.preventDefault();
     if (!isConfigured()) return setStatus("auth.message.configMissing", "error");
     const form = event.currentTarget;
@@ -286,7 +400,9 @@
         return setStatus("auth.message.invalidCredentials", "error");
       }
       form.reset();
-      await loadProfile(sessionData.session);
+      if (await loadProfile(sessionData.session) === false) {
+        await client.auth.signOut({ scope: "local" });
+      }
     } catch (error) {
       setStatus(isNetworkFailure(error) ? "auth.message.networkError" : "auth.message.genericError", "error");
     } finally {
@@ -294,52 +410,104 @@
     }
   }
 
-  async function handleRegistration(event) {
+  async function handleStudentLogin(event) {
+    event.preventDefault();
+    if (studentLoginInFlight) return;
+    const form = event.currentTarget;
+    const submit = form.querySelector('[type="submit"]');
+    if (!config?.url || !config?.publishableKey) {
+      return setStatus("auth.message.configMissing", "error");
+    }
+    studentLoginInFlight = true;
+    submit.disabled = true;
+    setStatus("auth.message.demoChecking");
+    try {
+      const student = await getDemoAuth().login(
+        form.elements.full_name.value,
+        form.elements.username.value
+      );
+      renderDemoStudentAccount(student);
+      form.reset();
+      if (modal.classList.contains("open")) setView("account");
+      setStatus("auth.message.loginSuccess");
+    } catch (error) {
+      setStatus(demoLoginErrorKey(error), "error");
+    } finally {
+      studentLoginInFlight = false;
+      submit.disabled = false;
+    }
+  }
+
+  async function handleAdminProvision(event) {
     event.preventDefault();
     if (!isConfigured()) return setStatus("auth.message.configMissing", "error");
-    const form = event.currentTarget;
-    const normalizedUsername = usernames.normalizeUsername(form.elements.username.value);
-    if (!normalizedUsername.username) return setStatus("auth.message.invalidUsername", "error");
-    const password = form.elements.password.value;
-    if (password.length < minimumPasswordLength) {
-      return setStatus("auth.message.passwordMinimum", "error");
+    if (currentAccountRole !== "admin" || currentProfile?.must_change_password) {
+      return setStatus("auth.message.genericError", "error");
     }
-    form.elements.username.value = normalizedUsername.username;
+
+    const form = event.currentTarget;
+    const fullName = usernames.normalizeFullName(form.elements.full_name.value);
+    const rawUsername = form.elements.username.value.trim();
+    const username = usernames.normalizeUsername(rawUsername).username;
+    const studentId = form.elements.student_id.value.trim();
+    const email = form.elements.email.value.trim();
+    if (!fullName || !username || !studentId || !email) {
+      return setStatus("auth.message.invalidField", "error");
+    }
 
     const submit = form.querySelector('[type="submit"]');
     submit.disabled = true;
     try {
-      const { data, error } = await client.auth.signUp({
-        email: form.elements.email.value.trim(),
-        password,
-        options: {
-          data: { username: normalizedUsername.username }
-        }
+      await requestAdminStudents("POST", {
+        action: "provision",
+        full_name: fullName,
+        username,
+        student_id: studentId,
+        email
       });
-      if (error) {
-        setStatus(
-          error.code === "email_provider_disabled"
-            ? "auth.message.emailSignupDisabled"
-            : isNetworkFailure(error)
-              ? "auth.message.networkError"
-              : "auth.message.registrationFailure",
-          "error"
-        );
-        return;
-      }
-      if (!data.user || data.user.identities?.length === 0) {
-        setStatus("auth.message.registrationFailure", "error");
-        return;
-      }
-      if (data.session) {
-        form.reset();
-        await loadProfile(data.session);
-      } else {
-        setStatus("auth.message.registrationNeedsConfiguration", "error");
-      }
+      form.reset();
+      setStatus("auth.message.provisioned");
     } catch (error) {
-      setStatus(isNetworkFailure(error) ? "auth.message.networkError" : "auth.message.registrationFailure", "error");
+      setStatus(
+        isNetworkFailure(error)
+          ? "auth.message.networkError"
+          : "auth.message.provisioningError",
+        "error"
+      );
     } finally {
+      submit.disabled = false;
+    }
+  }
+
+  async function handleStudentProvisionExisting(event) {
+    const form = event.target.closest("form[data-user-id]");
+    if (!form) return;
+    event.preventDefault();
+    if (currentAccountRole !== "admin" || currentProfile?.must_change_password) {
+      return setStatus("auth.message.genericError", "error");
+    }
+
+    const fullName = usernames.normalizeFullName(form.elements.full_name.value);
+    const username = usernames.normalizeUsername(form.elements.username.value).username;
+    const studentId = form.elements.student_id.value.trim();
+    if (!fullName || !username || !studentId) {
+      return setStatus("auth.message.invalidField", "error");
+    }
+
+    const submit = form.querySelector('[type="submit"]');
+    submit.disabled = true;
+    try {
+      await requestAdminStudents("POST", {
+        action: "provision_existing",
+        userId: form.dataset.userId,
+        full_name: fullName,
+        username,
+        student_id: studentId
+      });
+      setStatus("auth.message.provisioned");
+      await loadPendingStudents(sessionRevision);
+    } catch (error) {
+      setStatus("auth.message.provisioningError", "error");
       submit.disabled = false;
     }
   }
@@ -436,13 +604,16 @@
   }
 
   async function handleSignOut() {
-    if (!client) return;
     try {
-      const { error } = await client.auth.signOut();
-      if (error) {
-        setStatus("auth.message.genericError", "error");
-        return;
+      if (currentSession && client) {
+        const { error } = await client.auth.signOut();
+        if (error) {
+          setStatus("auth.message.genericError", "error");
+          return;
+        }
       }
+      if (currentDemoStudent) getDemoAuth().signOut();
+      currentDemoStudent = null;
       currentSession = null;
       sessionRevision += 1;
       currentProfile = null;
@@ -450,7 +621,10 @@
       document.getElementById("authAdminPanel").hidden = true;
       document.getElementById("authAdminStudents").replaceChildren();
       setNavigationLabel();
-      setView("login");
+      currentAccountRole = null;
+      document.getElementById("authStudentAccountView").hidden = true;
+      document.getElementById("authAdminAccountView").hidden = true;
+      setView("studentLogin");
       setStatus("auth.message.signedOut");
     } catch (error) {
       setStatus("auth.message.genericError", "error");
@@ -467,7 +641,7 @@
         status: button.dataset.status
       });
       setStatus("auth.message.reviewUpdated");
-      await loadPendingStudents();
+      await loadPendingStudents(sessionRevision);
     } catch (error) {
       setStatus("auth.message.reviewError", "error");
       button.disabled = false;
@@ -495,8 +669,12 @@
     if (currentSession) {
       openModal("account");
       loadProfile(currentSession);
+    } else if (currentDemoStudent) {
+      openModal("account");
+      renderDemoStudentAccount(currentDemoStudent);
+      setView("account");
     } else {
-      openModal("login");
+      openModal("studentLogin");
     }
   });
   closeButton.addEventListener("click", closeModal);
@@ -504,25 +682,35 @@
     if (event.target === modal) closeModal();
   });
   modal.querySelectorAll("[data-auth-view]").forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.authView));
+    button.addEventListener("click", () => {
+      setView(button.dataset.authView);
+    });
   });
   modal.addEventListener("keydown", trapFocus);
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && modal.classList.contains("open")) closeModal();
   });
-  document.getElementById("authLoginForm").addEventListener("submit", handleLogin);
-  document.getElementById("authRegisterForm").addEventListener("submit", handleRegistration);
+  document.getElementById("authStudentLoginForm").addEventListener("submit", handleStudentLogin);
+  document.getElementById("authAdminLoginForm").addEventListener("submit", handleAdminLogin);
+  document.getElementById("authAdminProvisionForm").addEventListener("submit", handleAdminProvision);
   document.getElementById("authForgotForm").addEventListener("submit", handleForgotPassword);
   document.getElementById("authResetForm").addEventListener("submit", handlePasswordChange);
   document.getElementById("authChangePasswordForm").addEventListener("submit", handlePasswordChange);
   document.getElementById("authEmailForm").addEventListener("submit", handleEmailUpdate);
   document.getElementById("authLogout").addEventListener("click", handleSignOut);
   document.getElementById("authAdminStudents").addEventListener("click", handleStudentReview);
+  document.getElementById("authAdminStudents").addEventListener("submit", handleStudentProvisionExisting);
   modal.querySelectorAll("input[required]").forEach((input) => {
     input.addEventListener("invalid", () => {
       input.setCustomValidity(
         input.validity.valueMissing
-          ? i18n.t("auth.message.required")
+          ? i18n.t(
+            input.name === "full_name"
+              ? "auth.message.fullNameRequired"
+              : input.name === "username"
+                ? "auth.message.usernameRequired"
+                : "auth.message.required"
+          )
           : input.validity.tooShort
             ? i18n.t("auth.message.passwordMinimum")
           : i18n.t("auth.message.invalidField")
@@ -560,10 +748,17 @@
       client.auth.onAuthStateChange((event, session) => {
         window.setTimeout(() => {
           if (event === "PASSWORD_RECOVERY") showRecoveryView();
+          if (
+            session?.access_token
+            && session.access_token === currentSession?.access_token
+          ) {
+            return;
+          }
+          if (!session && !currentSession) return;
           loadProfile(session);
         }, 0);
       });
-      client.auth.getSession().then(({ data, error }) => {
+      client.auth.getSession().then(async ({ data, error }) => {
         if (error) {
           setStatus("auth.message.genericError", "error");
           return;
@@ -572,6 +767,7 @@
         setNavigationLabel();
         if (recoveryFlow) showRecoveryView();
         if (currentSession) loadProfile(currentSession);
+        else await restoreDemoStudentSession();
       }).catch(() => {
         setStatus("auth.message.genericError", "error");
       });
@@ -579,6 +775,8 @@
       client = null;
     }
   }
+
+  if (!client) restoreDemoStudentSession();
 
   window.Growise = window.Growise || {};
   window.Growise.auth = {

@@ -11,28 +11,11 @@ import {
 const usernamePattern = /^[a-z]+-[a-z0-9]+$/;
 
 function normalizeUsername(value: string): string | null {
-  if (value.trim().toLowerCase() === "admin") return "admin";
-
-  const parts = value.split("-");
-  if (parts.length !== 2) return null;
-
-  const name = parts[0]
-    .replace(/[đĐ]/g, "d")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z]/g, "");
-  const studentId = parts[1].toLowerCase();
-  const username = `${name}-${studentId}`;
-  if (
-    !name
-    || !/^[a-z0-9]+$/.test(studentId)
-    || username.length > 64
-    || !usernamePattern.test(username)
-  ) {
-    return null;
-  }
-  return username;
+  const username = value.trim().toLowerCase();
+  return username === "admin"
+    || (username.length <= 64 && usernamePattern.test(username))
+    ? username
+    : null;
 }
 
 Deno.serve(async (request) => {
@@ -63,11 +46,20 @@ Deno.serve(async (request) => {
     const serviceClient = createServiceClient();
     const { data: profile, error: profileError } = await serviceClient
       .from("growise_profiles")
-      .select("id")
+      .select("id,username")
       .eq("username", username)
       .maybeSingle();
     if (profileError) throw new RequestError(503, "identity_lookup_unavailable");
-    if (!profile) throw new RequestError(401, "invalid_credentials");
+    if (!profile || profile.username !== "admin") {
+      throw new RequestError(401, "invalid_credentials");
+    }
+
+    const { data: isAdmin, error: roleError } = await serviceClient.rpc(
+      "growise_user_has_role",
+      { target_user_id: profile.id, requested_role: "admin" }
+    );
+    if (roleError) throw new RequestError(503, "identity_lookup_unavailable");
+    if (!isAdmin) throw new RequestError(401, "invalid_credentials");
 
     const { data: authUser, error: userError } = await serviceClient.auth.admin
       .getUserById(profile.id);

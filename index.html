@@ -14,6 +14,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="js/supabase-config.js" defer></script>
 <script src="js/username.js" defer></script>
+<script src="js/demo-student-auth.js" defer></script>
 <script src="js/supabase-auth.js" defer></script>
 <script src="js/main.js" defer></script>
 <script src="js/subpage-orbits.js" defer></script>
@@ -345,27 +346,27 @@
       </div>
     </div>
     <p class="auth-status" id="authStatus" role="status" aria-live="polite" hidden></p>
-    <section id="authLoginView">
-      <h3 data-i18n="auth.login.heading">Sign in</h3>
-      <form id="authLoginForm" class="auth-form">
-        <div class="field"><label for="authLoginUsername" data-i18n="auth.username">Username</label><input id="authLoginUsername" name="username" autocomplete="username" maxlength="128" required data-i18n-placeholder="auth.username.placeholder" placeholder="dat-231283h1"></div>
-        <div class="field"><label for="authLoginPassword" data-i18n="auth.password">Password</label><input id="authLoginPassword" name="password" type="password" autocomplete="current-password" required></div>
+    <section id="authStudentLoginView">
+      <h3 data-i18n="auth.studentLogin.heading">Student sign in</h3>
+      <form id="authStudentLoginForm" class="auth-form">
+        <div class="field"><label for="authStudentFullName" data-i18n="auth.student.fullName">Full name</label><input id="authStudentFullName" name="full_name" autocomplete="name" maxlength="200" required data-i18n-placeholder="auth.student.fullNamePlaceholder" placeholder="Nguyễn Văn Thanh"></div>
+        <div class="field"><label for="authStudentUsername" data-i18n="auth.student.username">Username</label><input id="authStudentUsername" name="username" autocomplete="username" maxlength="64" required data-i18n-placeholder="auth.student.usernamePlaceholder" placeholder="thanh-23DH123456"></div>
+        <button class="btn btn-primary" type="submit" data-i18n="auth.login.submit">Sign in</button>
+      </form>
+      <p class="auth-demo-notice" data-i18n="auth.demo.notice">Demo access only. Accounts are stored in this browser and are not synced across devices.</p>
+      <div class="auth-links"><button type="button" data-auth-view="adminLogin" data-i18n="auth.admin.signIn">Administrator sign in</button></div>
+    </section>
+    <section id="authAdminLoginView" hidden>
+      <h3 data-i18n="auth.admin.signIn">Administrator sign in</h3>
+      <form id="authAdminLoginForm" class="auth-form">
+        <div class="field"><label for="authAdminUsername" data-i18n="auth.username">Username</label><input id="authAdminUsername" name="username" autocomplete="username" maxlength="128" required data-i18n-placeholder="auth.admin.usernamePlaceholder" placeholder="admin"></div>
+        <div class="field"><label for="authAdminPassword" data-i18n="auth.password">Password</label><input id="authAdminPassword" name="password" type="password" autocomplete="current-password" required></div>
         <button class="btn btn-primary" type="submit" data-i18n="auth.login.submit">Sign in</button>
       </form>
       <div class="auth-links">
         <button type="button" data-auth-view="forgot" data-i18n="auth.login.forgot">Forgot password?</button>
-        <button type="button" data-auth-view="register" data-i18n="auth.login.register">Create a student account</button>
+        <button type="button" data-auth-view="studentLogin" data-i18n="auth.student.back">Back to student sign in</button>
       </div>
-    </section>
-    <section id="authRegisterView" hidden>
-      <h3 data-i18n="auth.register.heading">Create a student account</h3>
-      <form id="authRegisterForm" class="auth-form">
-        <div class="field"><label for="authRegisterUsername" data-i18n="auth.register.username">Account</label><input id="authRegisterUsername" name="username" autocomplete="username" maxlength="64" required data-i18n-placeholder="auth.username.placeholder" placeholder="dat-231283h1"></div>
-        <div class="field"><label for="authRegisterEmail" data-i18n="auth.register.email">Confirmation email</label><input id="authRegisterEmail" name="email" type="email" autocomplete="email" required></div>
-        <div class="field"><label for="authRegisterPassword" data-i18n="auth.password">Password</label><input id="authRegisterPassword" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
-        <button class="btn btn-primary" type="submit" data-i18n="auth.register.submit">Register</button>
-      </form>
-      <div class="auth-links"><button type="button" data-auth-view="login" data-i18n="auth.register.back">Back to sign in</button></div>
     </section>
     <section id="authForgotView" hidden>
       <h3 data-i18n="auth.forgot.heading">Reset your password</h3>
@@ -373,7 +374,7 @@
         <div class="field"><label for="authForgotEmail" data-i18n="auth.email">Email</label><input id="authForgotEmail" name="email" type="email" autocomplete="email" required></div>
         <button class="btn btn-primary" type="submit" data-i18n="auth.forgot.submit">Send recovery link</button>
       </form>
-      <div class="auth-links"><button type="button" data-auth-view="login" data-i18n="auth.register.back">Back to sign in</button></div>
+      <div class="auth-links"><button type="button" data-auth-view="adminLogin" data-i18n="auth.register.back">Back to sign in</button></div>
     </section>
     <section id="authResetView" hidden>
       <h3 data-i18n="auth.reset.heading">Choose a new password</h3>
@@ -384,23 +385,39 @@
     </section>
     <section id="authAccountView" hidden>
       <h3 data-i18n="auth.account.heading">Your account</h3>
-      <dl class="auth-account-details">
-        <div><dt data-i18n="auth.email">Email</dt><dd id="authAccountEmail"></dd></div>
-        <div><dt data-i18n="auth.username">Username</dt><dd id="authAccountUsername"></dd></div>
-        <div><dt data-i18n="auth.studentStatus">Student status</dt><dd id="authAccountStatus"></dd></div>
-      </dl>
-      <form id="authEmailForm" class="auth-form auth-account-form">
-        <div class="field"><label for="authNewEmail" data-i18n="auth.email.new">Change email</label><input id="authNewEmail" name="email" type="email" autocomplete="email" required></div>
-        <button class="btn btn-ghost" type="submit" data-i18n="auth.email.update">Update email</button>
-      </form>
-      <form id="authChangePasswordForm" class="auth-form auth-account-form">
-        <div class="field"><label for="authAccountNewPassword" data-i18n="auth.newPassword">New password</label><input id="authAccountNewPassword" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
-        <button class="btn btn-ghost" type="submit" data-i18n="auth.password.update">Change password</button>
-      </form>
-      <section id="authAdminPanel" class="auth-admin-panel" hidden>
-        <h3 data-i18n="auth.admin.heading">Student verification</h3>
-        <p data-i18n="auth.admin.description">Review pending student accounts before granting verified student access.</p>
-        <div id="authAdminStudents" class="auth-admin-students"></div>
+      <section id="authStudentAccountView" hidden>
+        <dl class="auth-account-details">
+          <div><dt data-i18n="auth.student.fullName">Full name</dt><dd id="authAccountFullName"></dd></div>
+          <div><dt data-i18n="auth.student.studentId">Student ID</dt><dd id="authAccountStudentId"></dd></div>
+        </dl>
+      </section>
+      <section id="authAdminAccountView" hidden>
+        <dl class="auth-account-details">
+          <div><dt data-i18n="auth.email">Email</dt><dd id="authAccountEmail"></dd></div>
+          <div><dt data-i18n="auth.username">Username</dt><dd id="authAccountUsername"></dd></div>
+          <div><dt data-i18n="auth.studentStatus">Student status</dt><dd id="authAccountStatus"></dd></div>
+        </dl>
+        <form id="authEmailForm" class="auth-form auth-account-form">
+          <div class="field"><label for="authNewEmail" data-i18n="auth.email.new">Change email</label><input id="authNewEmail" name="email" type="email" autocomplete="email" required></div>
+          <button class="btn btn-ghost" type="submit" data-i18n="auth.email.update">Update email</button>
+        </form>
+        <form id="authChangePasswordForm" class="auth-form auth-account-form">
+          <div class="field"><label for="authAccountNewPassword" data-i18n="auth.newPassword">New password</label><input id="authAccountNewPassword" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
+          <button class="btn btn-ghost" type="submit" data-i18n="auth.password.update">Change password</button>
+        </form>
+        <section id="authAdminPanel" class="auth-admin-panel" hidden>
+          <h3 data-i18n="auth.admin.heading">Student accounts</h3>
+          <p data-i18n="auth.admin.description">Provision student accounts and manage legacy pending accounts.</p>
+          <form id="authAdminProvisionForm" class="auth-form">
+            <div class="field"><label for="authProvisionFullName" data-i18n="auth.student.fullName">Full name</label><input id="authProvisionFullName" name="full_name" autocomplete="off" maxlength="200" required></div>
+            <div class="field"><label for="authProvisionStudentId" data-i18n="auth.student.studentId">Student ID</label><input id="authProvisionStudentId" name="student_id" autocomplete="off" maxlength="64" required></div>
+            <div class="field"><label for="authProvisionUsername" data-i18n="auth.student.username">Username</label><input id="authProvisionUsername" name="username" autocomplete="off" maxlength="64" required></div>
+            <div class="field"><label for="authProvisionEmail" data-i18n="auth.email">Email</label><input id="authProvisionEmail" name="email" type="email" autocomplete="off" maxlength="254" required></div>
+            <button class="btn btn-primary" type="submit" data-i18n="auth.admin.provision">Create student account</button>
+          </form>
+          <h3 data-i18n="auth.admin.legacyHeading">Legacy pending accounts</h3>
+          <div id="authAdminStudents" class="auth-admin-students"></div>
+        </section>
       </section>
       <button class="btn btn-ghost auth-logout" id="authLogout" type="button" data-i18n="auth.logout">Sign out</button>
     </section>

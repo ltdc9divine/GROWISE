@@ -31,6 +31,24 @@ create table if not exists public.growise_profiles (
       and (username = 'admin' or username ~ '^[a-z]+-[a-z0-9]+$')
     ),
 
+  full_name text
+    check (
+      full_name is null
+      or (
+        full_name = regexp_replace(btrim(full_name), '\s+', ' ', 'g')
+        and length(full_name) between 1 and 200
+      )
+    ),
+
+  student_id text
+    check (
+      student_id is null
+      or (
+        student_id = btrim(student_id)
+        and length(student_id) between 1 and 64
+      )
+    ),
+
   student_status text not null default 'pending'
     check (
       student_status in (
@@ -178,6 +196,127 @@ revoke all on function public.growise_has_role(text)
 grant execute on function public.growise_has_role(text)
   to authenticated;
 
+create or replace function public.growise_user_has_role(
+  target_user_id uuid,
+  requested_role text
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select
+    auth.role() = 'service_role'
+    and requested_role in ('student', 'admin')
+    and exists (
+      select 1
+      from growise_private.user_roles as roles
+      where roles.user_id = target_user_id
+        and roles.role = requested_role
+    );
+$function$;
+
+revoke all on function public.growise_user_has_role(uuid, text)
+  from public, anon, authenticated;
+grant execute on function public.growise_user_has_role(uuid, text)
+  to service_role;
+
+create or replace function public.growise_provision_student(
+  target_user_id uuid,
+  student_full_name text,
+  student_username text,
+  student_number text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.role() is distinct from 'service_role' then
+    raise exception 'Service role is required';
+  end if;
+
+  if student_full_name is null
+    or student_full_name <> regexp_replace(btrim(student_full_name), '\s+', ' ', 'g')
+    or length(student_full_name) not between 1 and 200
+    or student_username is null
+    or student_username <> lower(btrim(student_username))
+    or student_username = 'admin'
+    or length(student_username) > 64
+    or student_username !~ '^[a-z]+-[a-z0-9]+$'
+    or student_number is null
+    or student_number <> btrim(student_number)
+    or length(student_number) not between 1 and 64 then
+    raise exception 'Invalid student profile';
+  end if;
+
+  if not exists (
+    select 1
+    from auth.users
+    where id = target_user_id
+  ) then
+    raise exception 'Auth user does not exist';
+  end if;
+
+  if exists (
+    select 1
+    from growise_private.user_roles
+    where user_id = target_user_id
+      and role = 'admin'
+  ) then
+    raise exception 'Administrator cannot be provisioned as a student';
+  end if;
+
+  if exists (
+    select 1
+    from public.growise_profiles
+    where id = target_user_id
+  ) then
+    update public.growise_profiles
+    set username = student_username,
+        full_name = student_full_name,
+        student_id = student_number,
+        student_status = 'verified',
+        must_change_password = false
+    where id = target_user_id
+      and username <> 'admin';
+    if not found then
+      raise exception 'Administrator profile cannot be provisioned as a student';
+    end if;
+  else
+    insert into public.growise_profiles (
+      id,
+      username,
+      full_name,
+      student_id,
+      student_status,
+      must_change_password
+    )
+    values (
+      target_user_id,
+      student_username,
+      student_full_name,
+      student_number,
+      'verified',
+      false
+    );
+  end if;
+
+  insert into growise_private.user_roles (user_id, role)
+  values (target_user_id, 'student')
+  on conflict (user_id, role) do nothing;
+end;
+$function$;
+
+revoke all on function
+  public.growise_provision_student(uuid, text, text, text)
+  from public, anon, authenticated;
+grant execute on function
+  public.growise_provision_student(uuid, text, text, text)
+  to service_role;
+
 -- =========================================================
 -- 6. ADMIN-ONLY BACKEND: UPDATE STUDENT STATUS
 -- =========================================================
@@ -192,42 +331,33 @@ security definer
 set search_path = ''
 as $function$
 begin
-  if next_status is null
-    or next_status not in ('verified', 'rejected') then
-    raise exception 'Invalid student status';
+  if auth.role() is distinct from 'service_role' then
+    raise exception 'Service role is required';
+  end if;
+
+  if next_status is distinct from 'rejected' then
+    raise exception 'Only locking a student account is allowed';
   end if;
 
   update public.growise_profiles
-  set student_status = next_status
+  set student_status = 'rejected'
   where id = target_user_id
-    and student_status = 'pending'
     and username <> 'admin'
-    and exists (
+    and student_status in ('pending', 'verified')
+    and not exists (
       select 1
-      from auth.users as auth_user
-      where auth_user.id = target_user_id
-        and auth_user.email_confirmed_at is not null
+      from growise_private.user_roles
+      where user_id = target_user_id
+        and role = 'admin'
     );
 
   if not found then
     raise exception 'Student profile not found or not eligible';
   end if;
 
-  if next_status = 'verified' then
-    insert into growise_private.user_roles (
-      user_id,
-      role
-    )
-    values (
-      target_user_id,
-      'student'
-    )
-    on conflict (user_id, role) do nothing;
-  else
-    delete from growise_private.user_roles
-    where user_id = target_user_id
-      and role = 'student';
-  end if;
+  delete from growise_private.user_roles
+  where user_id = target_user_id
+    and role = 'student';
 end;
 $function$;
 

@@ -5,7 +5,9 @@ const defaultOrigins = [
   "http://localhost:5500",
   "http://127.0.0.1:5500",
   "http://localhost:5173",
-  "http://127.0.0.1:5173"
+  "http://127.0.0.1:5173",
+  "http://localhost:8765",
+  "http://127.0.0.1:8765"
 ];
 
 export class RequestError extends Error {
@@ -26,6 +28,10 @@ function getAllowedOrigins(): Set<string> {
   );
 }
 
+export function isAllowedOrigin(origin: string | null): boolean {
+  return Boolean(origin && getAllowedOrigins().has(origin));
+}
+
 export function corsHeaders(request: Request): HeadersInit {
   const origin = request.headers.get("Origin");
   const headers: Record<string, string> = {
@@ -43,7 +49,7 @@ export function corsHeaders(request: Request): HeadersInit {
 export function handleOptions(request: Request): Response | null {
   if (request.method !== "OPTIONS") return null;
   const origin = request.headers.get("Origin");
-  if (origin && !getAllowedOrigins().has(origin)) {
+  if (origin && !isAllowedOrigin(origin)) {
     return new Response(null, { status: 403, headers: corsHeaders(request) });
   }
   return new Response(null, { status: 204, headers: corsHeaders(request) });

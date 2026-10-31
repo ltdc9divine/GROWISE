@@ -1,5 +1,11 @@
 [functions.username-login]
 verify_jwt = false
 
+[functions.student-otp-login]
+verify_jwt = false
+
+[functions.student-demo-login]
+verify_jwt = false
+
 [auth]
 password_min_length = 8

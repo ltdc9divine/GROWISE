@@ -196,40 +196,35 @@ At the username-refactor continuation, `git status --short` also showed new untr
 
 ## 12. Supabase authentication: implementation state and handoff
 
-### Verified constraints
+### Owner's current requirements
 
-- Keep the plain HTML/CSS/JavaScript architecture and all seven hash routes.
-- Student username is an identifier in the `name-mssv` form (for example `dat-231283h1`); it is not proof of student identity. Exactly one hyphen separates a non-empty normalized name and a non-empty alphanumeric MSSV. The normalized username is lowercase, unique case-insensitively, and limited to 64 characters. Vietnamese name diacritics are removed and `đ` becomes `d`; spaces and invalid characters are stripped from the name part. MSSV spaces and punctuation are rejected. `admin` is reserved for the administrator.
-- **Owner-selected student flow:** self-registration with confirmed email; an admin must separately approve student status before a `student` role is granted. Email confirmation proves mailbox access, not HUFLIT identity. No institutional email-domain allowlist was supplied.
-- **Owner-selected recovery/session policy:** password recovery by verified email; keep sessions across reloads until logout.
-- **Owner-selected access scope:** all seven existing routes remain public. Consultation and Feedback submissions remain public because they are currently local demo behavior with no saved/submitted records. Do not invent private records or additional pages.
-- **Owner-selected admin bootstrap fallback:** if Supabase rejects `admin/admin`, use a stronger temporary development password rather than weakening production password protections. Require a password change before production.
-- The initial `admin` / `admin` credentials are a development-only requirement. They must not be embedded in client code or compared there; force a password change before production.
-- **Compatibility risk:** `admin` is only five characters and may be rejected by Supabase Auth's configured minimum-length or weak-password protections. Do not lower production password protections to make this development credential work.
-- Supabase Auth uses email/password identities, not arbitrary username/password login. A username must be mapped server-side before calling Auth.
-- A publishable/anon key may be in browser configuration; a service-role key must remain server-side.
-- The owner supplied `https://oqyibynbowpegjjaigoz.supabase.co`, a publishable key, and the production origin `https://growise-five.vercel.app`. These values are configured in the browser, but the project has not been independently verified. The service-role secret was not supplied and must never be placed in the repository.
+- Keep the plain HTML/CSS/JavaScript architecture and all seven existing public hash routes.
+- Student login asks only for full name and username. A valid new username creates a demo profile in the shared Supabase Database; an existing username requires the same normalized full name.
+- Username normalization is trim + lowercase with the shared `^[a-z]+-[a-z0-9]+$` rule; `admin` is reserved. Full names preserve Vietnamese diacritics and normalize whitespace. Demo MSSV is the portion after the hyphen.
+- The database is shared by localhost and Vercel. Browser `localStorage` stores only the name/username needed for a temporary UI session, and every restored session is revalidated by the backend.
+- Student account details after login show only demo full name and student ID.
+- Admin retains username/password sign-in, role checks, forced-password-change behavior, and student management.
+- No production database migration, function deployment, commit, push, or deployment is authorized by this task.
 
-### Implemented in source; live status reported by owner, not independently verified
+### Current implementation in progress
 
-- [`js/supabase-config.js`](../js/supabase-config.js) contains the owner-supplied public project URL, publishable key, and redirect origin. These are browser-visible values, not server secrets.
-- [`js/supabase-auth.js`](../js/supabase-auth.js) adds a localized account dialog, registration, username sign-in, email recovery/update, session restoration/sign-out, password change, and an admin student-review UI. The official Supabase JS v2 CDN is loaded from `index.html`.
-- [`supabase/functions/username-login/index.ts`](../supabase/functions/username-login/index.ts) maps a canonical username to the Auth email server-side and delegates password verification to Supabase Auth. [`supabase/functions/admin-student-review/index.ts`](../supabase/functions/admin-student-review/index.ts) verifies an authenticated admin before listing/reviewing pending students. [`supabase/functions/change-password/index.ts`](../supabase/functions/change-password/index.ts) verifies the caller before changing the password and clearing the forced-change flag.
-- [`supabase/functions/_shared/auth.ts`](../supabase/functions/_shared/auth.ts) contains request validation, CORS handling, client construction, and JWT/role checks. [`supabase/config.toml`](../supabase/config.toml) disables gateway JWT verification only for the public username-login endpoint.
-- [`supabase/schema.sql`](../supabase/schema.sql) defines pending profiles, private roles, RLS, signup profile creation, role/status functions, and one-time admin bootstrap. The owner reports it has been applied; this has not been independently checked against the live database.
-- [`supabase/migrations/20261031_username_hyphen_format.sql`](../supabase/migrations/20261031_username_hyphen_format.sql) is a separate manual transaction for an existing database. It preflights legacy format and collisions, preserves a private old-to-new map, migrates existing dotted usernames to hyphens in both profiles and Auth metadata while preserving other metadata, and updates the check constraint and trigger. It has not been run. Never rerun the full schema on an existing installation.
-- The owner reports the three Edge Functions were deployed; their current deployed versions, secrets, and behavior have not been independently verified. Deploy the changed username-login function only after review and project approval.
-- [`docs/SUPABASE_SETUP.md`](./SUPABASE_SETUP.md) contains Dashboard, secrets, deployment, bootstrap, and verification instructions.
-- No Supabase project connectivity, schema application, Edge Function deployment, or live authentication has been verified. All seven routes remain public. Consultation and Feedback remain client-only and are not saved to Supabase.
+- Current working branch is `feature/student-otp-login`, based on `fed03c8`; the worktree has uncommitted changes. Preserve unrelated work and do not commit/push.
+- [`../js/supabase-auth.js`](../js/supabase-auth.js), [`../js/username.js`](../js/username.js), [`../js/demo-student-auth.js`](../js/demo-student-auth.js), and [`../js/translations.js`](../js/translations.js) implement server-backed name/username demo login, preserve the separate administrator password path, and restrict student display to full name and the database student ID.
+- [`../supabase/migrations/20261031090700_student_demo_students.sql`](../supabase/migrations/20261031090700_student_demo_students.sql) creates the RLS-protected demo table, case-insensitive unique username index, and database-backed registration rate limit. It was applied to Supabase project `oqyibynbowpegjjaigoz`; only its unique migration version was recorded as applied. The older `20261031` username-format and `20261101` OTP migrations remain pending and were not applied.
+- [`../supabase/functions/student-demo-login/index.ts`](../supabase/functions/student-demo-login/index.ts) implements the public demo endpoint with strict input validation, mismatch rejection, race handling for SQLSTATE `23505`, and registration throttling. It is ACTIVE as version 2 with `verify_jwt=false`.
+- Vercel Preview `https://growise-2o8ylhod6-ltdc9divine-5816s-projects.vercel.app` is READY, with deployment protection enabled. Local browser login/revalidation and synthetic API create/reuse/mismatch/invalid-input checks passed. Interactive browser testing of Preview was blocked by the protection screen; the deployed HTML was verified through authenticated Vercel CLI access.
+- Student demo sign-in does not call `student-otp-login`, send email, create Supabase Auth users/sessions, or assign Supabase roles. The old OTP Edge Function/migration remain in the repository but are unused by this frontend.
+- [`../supabase/functions/username-login/index.ts`](../supabase/functions/username-login/index.ts) is restricted to the administrator account and trusted admin role.
+- [`../supabase/functions/admin-student-review/index.ts`](../supabase/functions/admin-student-review/index.ts) remains admin-only and continues to manage `growise_profiles`; it does not provision demo profiles.
+- [`../supabase/migrations/20261101_student_otp_login.sql`](../supabase/migrations/20261101_student_otp_login.sql) remains unused by the current demo student flow and must not be applied for it.
+- [`../tests/username.test.js`](../tests/username.test.js) covers normalization, mocked service-backed creation/reuse, mismatch rejection, backend session revalidation/sign-out, migration security properties, and admin separation. [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md) documents the migration, Edge Function secrets, CORS allowlist, and administrator setup.
 
-### Proposed database shape
+### Security and verification limits
 
-- `public.growise_profiles`: `id` references `auth.users(id)`, a case-insensitively unique canonical username, student verification status, and a trusted `must_change_password` flag; users can read only their own profile and cannot write account-control fields.
-- A non-exposed `growise_private.user_roles` table: server-managed `student` and/or `admin` roles, with no client insert/update/delete permissions.
-- `public.growise_has_role(text)` checks only the role of the current `auth.uid()` using a fixed empty `search_path`. RLS policies for future protected tables can use this helper.
-- `public.growise_set_student_status(uuid, text)` updates only an email-confirmed pending, non-admin profile and its student role. It is granted only to `service_role`; the deployed admin Edge Function must verify the caller's role before calling it.
-- Do not create application-specific protected-data tables until the owner identifies what information is restricted. Do not store passwords in either table.
-- The signup trigger enforces canonical lowercase `name-mssv` format and creates only a pending profile. It does not grant student access. The migration is required for an existing database that has legacy dotted usernames; it is a manual action and must not be run until preflight, backup, and owner approval are complete.
+- The service-role key is not added to browser code. RLS is enabled and direct `anon`/`authenticated` table privileges are revoked. The rate-limit RPC is restricted to `service_role`.
+- A name/username pair is not authentication. Demo data must not be used to protect personal or learning data. Do not grant the demo a Supabase role or pass its identity to admin endpoints.
+- Local JavaScript tests, SQL migration execution, synthetic function requests, local browser login/revalidation, exact CORS preflights, and direct publishable-key denial were verified. Admin end-to-end behavior remains untested. Vercel Preview is protected, so its interactive login flow was not verified in the browser. Direct database RLS introspection timed out with a temporary-role password error.
+- Do not apply the legacy [`../supabase/migrations/20261101_student_otp_login.sql`](../supabase/migrations/20261101_student_otp_login.sql) or claim the database flow is live until the demo migration and function have been verified against the project.
 
 ### Configuration and secrets
 
@@ -245,21 +240,12 @@ No service-role key or account credentials are present. Supabase Dashboard setup
 
 ### Setup and verification plan
 
-1. Verify the supplied project URL/key in the owner's Dashboard and establish exact redirect URLs.
-2. Verify the owner-reported applied schema and deployed functions in the Dashboard. Do not rerun `schema.sql` on an existing database.
-3. Configure the Supabase Auth email provider, confirmation/recovery, URL allowlist, and a password minimum matching the frontend/function's 8-character minimum.
-4. Back up the database, run the migration's read-only collision preflight, review it, and obtain explicit owner approval before manually applying the username migration. Leave it unapplied until then.
-5. After migration review, deploy the updated functions only with explicit approval; keep service-role secrets in Supabase's secret store.
-6. Exercise registration, confirmation, valid/invalid username login, recovery, email update, session restoration, sign-out, forced password change, role checks, admin review, RLS, and allowed/disallowed origins against the live project.
-7. Re-test all seven public routes, VI/EN, planner/resources/forms, responsive widths, JavaScript syntax, and `git diff --check`.
-
-### Pending owner/setup inputs
-
-- Which admin email will the owner provision in the Dashboard? Do not send its password through chat.
-- The owner has not supplied an institutional email-domain allowlist; current identity review therefore relies on manual administrator approval.
-- Confirm production/development redirect URLs and permitted CORS origins when configuring Supabase.
-- Decide the Auth provider's password policy in Supabase; the website defers to the configured provider policy.
-- A service-role key is required only in the trusted Edge Function secret store and must never be requested for browser configuration.
+1. Review live Supabase project identity, existing schema, RLS, grants, triggers, and function versions; do not assume earlier owner reports reflect current deployment.
+2. Review migration `20261031090700_student_demo_students.sql` and the new Edge Function before applying/deploying them. Never apply the unrelated legacy migrations as part of this demo flow.
+3. Keep existing administrator Supabase Email settings, recovery, exact redirects, and allowed origins configured as required by the admin flow.
+4. Configure Edge Function secrets only in the Supabase secret store and deploy the functions only after review and approval.
+5. Test new profile creation, matching-name reuse, mismatch rejection, concurrent unique-username requests, session revalidation/sign-out, and confirm no Supabase session/role is created; separately test admin login and management.
+6. Configure exact local, production, and actual Preview origins in `GROWISE_ALLOWED_ORIGINS`, then test localhost and Vercel Preview against the same profile. Re-test all public routes, VI/EN, planner/resources/forms, responsive widths, JavaScript syntax, and `git diff --check`.
 
 ## 13. Continuing development and verification checklist
 
@@ -267,7 +253,7 @@ No service-role key or account credentials are present. Supabase Dashboard setup
 - Keep any future login UI and errors in the existing VI/EN localization system.
 - Do not implement account-policy assumptions or browser-side role checks as authorization.
 - Never add service-role credentials or plaintext passwords to the repository.
-- Do not call authentication “connected” until the owner configures the project, applies SQL, deploys functions, and live tests pass.
+- Do not describe the name/username demo as identity authentication or as protection for private data.
 - For frontend changes, run `node --check` on modified JavaScript and `git diff --check`; exercise the affected UI in a browser and retest route preservation.
-- Use an actual configured Supabase project to verify auth and RLS; SQL syntax inspection alone is not proof of authorization behavior.
+- Use an actual non-production Supabase project to verify auth and RLS; SQL syntax inspection alone is not proof of authorization behavior.
 - Do not commit or push unless explicitly requested.
