@@ -22,6 +22,7 @@
 <script src="js/subpage-orbits.js" defer></script>
 <script src="js/particle-orb.js" defer></script>
 <script src="js/budget-planner.js" defer></script>
+<script src="js/growise-ai-assistant.js" defer></script>
 </head>
 <body>
 <header class="nav">
@@ -157,7 +158,7 @@
       </div>
       <div class="kpi-grid"><div class="kpi"><span>Suggested first test</span><strong id="kpiTest">7–14 days</strong></div><div class="kpi"><span>Primary metric</span><strong id="kpiMetric">Engagement</strong></div></div>
       <div class="priority-list" id="priorityList"><div class="priority"><b>01</b><span>Publish useful, consistent content for one clearly defined audience.</span></div><div class="priority"><b>02</b><span>Test one small paid campaign only after you have a clear message.</span></div><div class="priority"><b>03</b><span>Track inquiries and customer feedback—not likes alone.</span></div></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px"><button class="btn btn-ghost" id="copyPlan">Copy plan summary ↗</button><button class="btn btn-ghost" id="downloadPlan">Download TXT ↗</button><a class="btn btn-ghost" href="#resources" data-page="resources">Explore practical guides ↗</a><a class="btn btn-ghost" href="#consultation" data-page="consultation">Get support ↗</a></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px"><button class="btn btn-ghost" id="copyPlan">Copy plan summary ↗</button><button class="btn btn-ghost" id="downloadPlan">Download TXT ↗</button><button class="btn btn-ghost" id="assistantSharePlanner" type="button" data-i18n="assistant.sharePlanner">Ask AI to review this plan ↗</button><a class="btn btn-ghost" href="#resources" data-page="resources">Explore practical guides ↗</a><a class="btn btn-ghost" href="#consultation" data-page="consultation">Get support ↗</a></div>
       <div class="notice">Educational draft only: this planner applies fixed starting assumptions. It is not a revenue forecast, financial advice, or a guarantee of campaign results. Check the allocation against your actual costs, margins, customer evidence, and campaign data before spending.</div>
     </div>
   </div></section></div>
@@ -332,6 +333,29 @@
   </div>
 </footer>
 <div class="toast" id="toast" role="status"></div>
+<div class="assistant-widget">
+  <button class="assistant-launcher" id="assistantLauncher" type="button" aria-expanded="false" aria-controls="assistantPanel">
+    <span aria-hidden="true">✦</span><span data-i18n="assistant.launcher">Ask Growise AI</span>
+  </button>
+  <section class="assistant-panel" id="assistantPanel" aria-label="Growise AI Assistant" data-i18n-aria-label="assistant.title" hidden>
+    <header class="assistant-header">
+      <div><div class="eyebrow mono" data-i18n="assistant.eyebrow">GROWISE / AI</div><h2 id="assistantTitle" data-i18n="assistant.title">Growise AI Assistant</h2></div>
+      <div class="assistant-controls">
+        <button id="assistantClear" type="button" data-i18n="assistant.clear">Clear chat</button>
+        <button class="assistant-close" id="assistantClose" type="button" aria-label="Close chat" data-i18n-aria-label="assistant.close">×</button>
+      </div>
+    </header>
+    <p class="assistant-privacy" data-i18n="assistant.privacy">Chat is stored only for this browser session. Do not share passwords, student records, or private consultation and feedback details.</p>
+    <div class="assistant-messages" id="assistantMessages" role="log" aria-live="polite" aria-relevant="additions text"></div>
+    <div class="assistant-status" id="assistantStatus" role="status" aria-live="polite" hidden></div>
+    <button class="assistant-retry" id="assistantRetry" type="button" data-i18n="assistant.retry" hidden>Try again</button>
+    <form class="assistant-form" id="assistantForm">
+      <label class="assistant-sr-only" for="assistantInput" data-i18n="assistant.inputLabel">Message Growise AI</label>
+      <textarea id="assistantInput" maxlength="2000" rows="2" data-i18n-placeholder="assistant.placeholder" placeholder="Ask about your startup marketing plan…"></textarea>
+      <button class="btn btn-primary" id="assistantSend" type="submit" data-i18n="assistant.send">Send</button>
+    </form>
+  </section>
+</div>
 <div class="modal auth-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div class="modal-box auth-modal-box">
     <div class="modal-head">
