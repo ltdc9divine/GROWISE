@@ -2757,7 +2757,7 @@ textarea:focus-visible {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .nav {
     height: 72px;
   }
@@ -2794,7 +2794,8 @@ textarea:focus-visible {
     display: flex;
   }
 
-  .navlinks a {
+  .navlinks a,
+  .navlinks .nav-auth-button {
     border-bottom: 1px solid var(--line);
     padding: 13px 0;
     font-size: 14px;
@@ -2806,7 +2807,9 @@ textarea:focus-visible {
     border-bottom: 0;
     padding: 12px 17px;
   }
+}
 
+@media (max-width: 900px) {
   .hero {
     grid-template-columns: minmax(0, 1fr);
     gap: 20px;
@@ -3924,14 +3927,6 @@ textarea:focus-visible {
 
 .navlinks .nav-auth-button {
   text-align: left;
-}
-
-@media (max-width: 900px) {
-  .navlinks .nav-auth-button {
-    border-bottom: 1px solid var(--line);
-    padding: 13px 0;
-    font-size: 14px;
-  }
 }
 
 @media (max-width: 680px) {
