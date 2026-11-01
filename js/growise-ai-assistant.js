@@ -82,13 +82,15 @@
   }
 
   function errorMessage(error) {
+    const code = error?.code || error?.error;
     const messages = {
       network_error: "assistant.error.network",
       rate_limited: "assistant.error.rateLimited",
       quota_exceeded: "assistant.error.quota",
       service_not_configured: "assistant.error.notConfigured",
       model_not_configured: "assistant.error.modelNotConfigured",
-      gemini_credentials_invalid: "assistant.error.credentials",
+      groq_credentials_invalid: "assistant.error.credentials",
+      groq_bad_request: "assistant.error.badRequest",
       request_timeout: "assistant.error.timeout",
       invalid_request: "assistant.error.invalidRequest",
       message_too_long: "assistant.error.messageTooLong",
@@ -99,18 +101,18 @@
       empty_response: "assistant.error.empty"
     };
     if (
-      error?.code === "model_unavailable"
-      || error?.code === "model_temporarily_unavailable"
+      code === "model_unavailable"
+      || code === "model_temporarily_unavailable"
     ) {
       const models = Array.isArray(error.models) && error.models.length
         ? error.models.join(", ")
         : i18n.t("assistant.error.noModels");
-      const messageKey = error.code === "model_temporarily_unavailable"
+      const messageKey = code === "model_temporarily_unavailable"
         ? "assistant.error.modelTemporary"
         : "assistant.error.modelUnavailable";
       return i18n.t(messageKey, { models });
     }
-    return i18n.t(messages[error?.code] || "assistant.error.generic");
+    return i18n.t(messages[code] || "assistant.error.generic");
   }
 
   async function requestReply(message, isRetry = false) {

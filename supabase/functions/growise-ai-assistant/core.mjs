@@ -1,13 +1,13 @@
-export const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
+export const DEFAULT_GROQ_MODEL = "openai/gpt-oss-20b";
 
-const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+const GROQ_API_BASE = "https://api.groq.com/openai/v1";
 const MAX_BODY_BYTES = 40_000;
 const MAX_MESSAGES = 11;
 const MAX_USER_MESSAGE_LENGTH = 2_000;
 const MAX_MODEL_MESSAGE_LENGTH = 4_000;
 const MAX_TOTAL_LENGTH = 8_000;
 const MAX_OUTPUT_TOKENS = 700;
-const MAX_PLAN_OUTPUT_TOKENS = 2_000;
+const MAX_PLAN_OUTPUT_TOKENS = 3_000;
 const PLAN_INDUSTRIES = new Set(["product", "food", "service", "education", "fashion", "tech"]);
 const PLAN_AUDIENCES = new Set([
   "students",
@@ -591,61 +591,45 @@ async function readProviderJson(result) {
   }
 }
 
-function providerErrorStatus(payload) {
-  return typeof payload?.error?.status === "string"
-    ? payload.error.status.toUpperCase()
-    : "";
-}
-
-function isUnavailableModel(result, payload) {
-  const status = providerErrorStatus(payload);
-  const message = typeof payload?.error?.message === "string"
-    ? payload.error.message.toLowerCase()
-    : "";
-  return result.status === 404
-    || status === "NOT_FOUND"
-    || (result.status === 400 && /model.+(not found|not supported|does not exist)/.test(message));
-}
-
 function suggestedModels(models, currentModel) {
   return models.filter((model) => model !== currentModel).slice(0, 10);
 }
 
 async function getSupportedModels(fetcher, apiKey, timeoutMs) {
-  const models = [];
-  let pageToken = "";
-
-  for (let page = 0; page < 5; page += 1) {
-    const params = new URLSearchParams({ pageSize: "100" });
-    if (pageToken) params.set("pageToken", pageToken);
-    let response;
-    let payload;
-    try {
-      ({ result: response, payload } = await fetchJsonWithTimeout(
-        fetcher,
-        `${GEMINI_API_BASE}/models?${params}`,
-        { method: "GET", headers: { "x-goog-api-key": apiKey } },
-        timeoutMs
-      ));
-    } catch {
-      return [];
-    }
-    if (!response.ok) return [];
-    if (!Array.isArray(payload?.models)) return [];
-    for (const model of payload.models) {
-      if (
-        typeof model?.name === "string"
-        && Array.isArray(model.supportedGenerationMethods)
-        && model.supportedGenerationMethods.includes("generateContent")
-      ) {
-        models.push(model.name.replace(/^models\//, ""));
-      }
-    }
-    if (typeof payload.nextPageToken !== "string" || !payload.nextPageToken) break;
-    pageToken = payload.nextPageToken;
+  try {
+    const { result, payload } = await fetchJsonWithTimeout(
+      fetcher,
+      `${GROQ_API_BASE}/models`,
+      { method: "GET", headers: { Authorization: `Bearer ${apiKey}` } },
+      timeoutMs
+    );
+    if (!result.ok || !Array.isArray(payload?.data)) return [];
+    return [...new Set(payload.data
+      .map((model) => model?.id)
+      .filter((model) => typeof model === "string" && model.length <= 128))]
+      .slice(0, 100);
+  } catch {
+    return [];
   }
+}
 
-  return [...new Set(models)].slice(0, 100);
+function rateLimitMetadata(headers) {
+  const fields = [
+    ["requestsLimit", "x-ratelimit-limit-requests"],
+    ["requestsRemaining", "x-ratelimit-remaining-requests"],
+    ["requestsReset", "x-ratelimit-reset-requests"],
+    ["tokensLimit", "x-ratelimit-limit-tokens"],
+    ["tokensRemaining", "x-ratelimit-remaining-tokens"],
+    ["tokensReset", "x-ratelimit-reset-tokens"]
+  ];
+  const metadata = {};
+  for (const [key, header] of fields) {
+    const value = headers.get(header);
+    if (value && value.length <= 40 && /^[0-9a-zA-Z.:-]+$/.test(value)) {
+      metadata[key] = value;
+    }
+  }
+  return Object.keys(metadata).length ? metadata : null;
 }
 
 export async function handleAssistantRequest(request, dependencies) {
@@ -682,14 +666,13 @@ export async function handleAssistantRequest(request, dependencies) {
       });
     }
 
-    const apiKey = env.GEMINI_API_KEY?.trim();
+    const apiKey = env.GROQ_API_KEY?.trim();
     if (!apiKey) throw new AssistantRequestError(503, "service_not_configured");
-    const model = (env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL).trim();
-    if (!/^(?:models\/)?[A-Za-z0-9._-]{1,128}$/.test(model)) {
+    const model = (env.GROQ_MODEL || DEFAULT_GROQ_MODEL).trim();
+    if (!/^[A-Za-z0-9._/-]{1,128}$/.test(model) || model.includes("..")) {
       throw new AssistantRequestError(503, "model_not_configured");
     }
-    const modelName = model.replace(/^models\//, "");
-    const endpoint = `${GEMINI_API_BASE}/models/${encodeURIComponent(modelName)}:generateContent`;
+    const endpoint = `${GROQ_API_BASE}/chat/completions`;
     let payload;
     let result;
     try {
@@ -700,15 +683,19 @@ export async function handleAssistantRequest(request, dependencies) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-goog-api-key": apiKey
+            Authorization: `Bearer ${apiKey}`
           },
           body: JSON.stringify(budgetPlan
             ? {
-                systemInstruction: { parts: [{ text: BUDGET_PLAN_INSTRUCTION }] },
-                contents: [{
-                  role: "user",
-                  parts: [{
-                    text: [
+                model,
+                messages: [
+                  {
+                    role: "system",
+                    content: `${BUDGET_PLAN_INSTRUCTION}\nReturn JSON matching this schema exactly. Uppercase type names denote JSON types: ${JSON.stringify(BUDGET_PLAN_SCHEMA)}`
+                  },
+                  {
+                    role: "user",
+                    content: [
                       `Language: ${budgetPlan.locale === "vi" ? "Vietnamese" : "English"}`,
                       `Startup name: ${budgetPlan.startupName || "not provided"}`,
                       `Product/service: ${budgetPlan.product || "not provided"}`,
@@ -719,82 +706,74 @@ export async function handleAssistantRequest(request, dependencies) {
                       `Current channels: ${budgetPlan.channels}`,
                       `Existing planner calculation (reference only): ${JSON.stringify(budgetPlan.baselineAllocations)}`
                     ].join("\n")
-                  }]
-                }],
-                generationConfig: {
-                  maxOutputTokens: MAX_PLAN_OUTPUT_TOKENS,
-                  responseMimeType: "application/json",
-                  responseSchema: BUDGET_PLAN_SCHEMA,
-                  thinkingConfig: { thinkingLevel: "MINIMAL" }
-                }
+                  }
+                ],
+                max_completion_tokens: MAX_PLAN_OUTPUT_TOKENS,
+                reasoning_effort: "low",
+                response_format: { type: "json_object" },
+                temperature: 0.2
               }
             : {
-                systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-                contents: messages.map(({ role, text }) => ({
-                  role,
-                  parts: [{ text }]
-                })),
-                generationConfig: {
-                  maxOutputTokens: MAX_OUTPUT_TOKENS,
-                  thinkingConfig: { thinkingLevel: "MINIMAL" }
-                }
+                model,
+                messages: [
+                  { role: "system", content: SYSTEM_INSTRUCTION },
+                  ...messages.map(({ role, text }) => ({
+                    role: role === "model" ? "assistant" : "user",
+                    content: text
+                  }))
+                ],
+                max_completion_tokens: MAX_OUTPUT_TOKENS,
+                reasoning_effort: "low",
+                temperature: 0.4
               })
         },
         timeoutMs
       ));
     } catch (error) {
       if (error?.name === "TimeoutError" || error?.name === "AbortError") {
-        const supportedModels = await getSupportedModels(
-          fetcher,
-          apiKey,
-          Math.min(timeoutMs, 10_000)
-        );
-        if (supportedModels.length && !supportedModels.includes(modelName)) {
-          throw new AssistantRequestError(503, "model_unavailable", {
-            models: supportedModels
-          });
-        }
         throw new AssistantRequestError(504, "request_timeout");
       }
-      throw new AssistantRequestError(502, "provider_unavailable");
+      throw new AssistantRequestError(502, "network_error");
     }
 
     if (!result.ok) {
-      if (isUnavailableModel(result, payload)) {
+      const providerMessage = typeof payload?.error?.message === "string"
+        ? payload.error.message.toLowerCase()
+        : "";
+      if (result.status === 404 || (result.status === 400 && /model/.test(providerMessage))) {
         const supportedModels = await getSupportedModels(fetcher, apiKey, timeoutMs);
         throw new AssistantRequestError(503, "model_unavailable", {
-          models: suggestedModels(supportedModels, modelName)
+          models: suggestedModels(supportedModels, model)
         });
-      }
-      const providerStatus = providerErrorStatus(payload);
-      if (result.status === 503 && providerStatus === "UNAVAILABLE") {
-        const supportedModels = await getSupportedModels(
-          fetcher,
-          apiKey,
-          Math.min(timeoutMs, 10_000)
-        );
-        throw new AssistantRequestError(503, "model_temporarily_unavailable", {
-          models: suggestedModels(supportedModels, modelName)
-        });
-      }
-      if (
-        result.status === 429
-        || providerStatus === "RESOURCE_EXHAUSTED"
-        || providerStatus === "QUOTA_EXCEEDED"
-      ) {
-        throw new AssistantRequestError(429, "quota_exceeded");
       }
       if (result.status === 401 || result.status === 403) {
-        throw new AssistantRequestError(503, "gemini_credentials_invalid");
+        throw new AssistantRequestError(503, "groq_credentials_invalid");
+      }
+      if (result.status === 429) {
+        throw new AssistantRequestError(429, "quota_exceeded", {
+          rateLimit: rateLimitMetadata(result.headers)
+        });
+      }
+      if (result.status === 400) {
+        throw new AssistantRequestError(400, "groq_bad_request");
+      }
+      if (result.status >= 500) {
+        throw new AssistantRequestError(503, "model_temporarily_unavailable", {
+          models: suggestedModels(await getSupportedModels(fetcher, apiKey, timeoutMs), model)
+        });
       }
       throw new AssistantRequestError(502, "provider_unavailable");
     }
 
-    const parts = payload?.candidates?.[0]?.content?.parts;
-    const answer = Array.isArray(parts)
-      ? parts.map((part) => typeof part?.text === "string" ? part.text : "").join("").trim()
+    const choice = payload?.choices?.[0];
+    if (choice?.finish_reason === "length") {
+      throw new AssistantRequestError(502, "invalid_response");
+    }
+    const answer = typeof choice?.message?.content === "string"
+      ? choice.message.content.trim()
       : "";
     if (!answer) throw new AssistantRequestError(502, "empty_response");
+    const providerRateLimit = rateLimitMetadata(result.headers);
     if (budgetPlan) {
       let parsedPlan;
       try {
@@ -808,14 +787,18 @@ export async function handleAssistantRequest(request, dependencies) {
         plan: {
           ...validatedPlan,
           budget: budgetPlan.budget
-        }
+        },
+        ...(providerRateLimit ? { rateLimit: providerRateLimit } : {})
       }, 200);
     }
     if (answer.length > MAX_MODEL_MESSAGE_LENGTH) {
       throw new AssistantRequestError(502, "invalid_response");
     }
 
-    return response(request, jsonResponse, { reply: answer }, 200);
+    return response(request, jsonResponse, {
+      reply: answer,
+      ...(providerRateLimit ? { rateLimit: providerRateLimit } : {})
+    }, 200);
   } catch (error) {
     if (error instanceof AssistantRequestError) {
       return response(

@@ -18,8 +18,8 @@ Deno.serve(async (request) => {
 
   return handleAssistantRequest(request, {
     env: {
-      GEMINI_API_KEY: Deno.env.get("GEMINI_API_KEY"),
-      GEMINI_MODEL: Deno.env.get("GEMINI_MODEL")
+      GROQ_API_KEY: Deno.env.get("GROQ_API_KEY"),
+      GROQ_MODEL: Deno.env.get("GROQ_MODEL")
     },
     isAllowedOrigin,
     jsonResponse,
