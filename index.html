@@ -138,9 +138,9 @@
   <section class="section"><div class="planner-layout">
     <div class="form-panel"><h2 class="panel-title">Tell us about your startup</h2><p class="panel-sub">Choose the options closest to your current situation. The result is a draft based on simple assumptions, not a forecast or a guaranteed recommendation.</p>
       <div class="field-grid">
-        <div class="field"><label for="startupName">Startup name</label><input id="startupName" placeholder="e.g. Mộc Bakery" data-i18n-placeholder="planner.placeholder.startupName"></div>
+        <div class="field"><label for="startupName">Startup name</label><input id="startupName" maxlength="120" placeholder="e.g. Mộc Bakery" data-i18n-placeholder="planner.placeholder.startupName"></div>
         <div class="field"><label for="industry">Business industry</label><select id="industry"><option value="product">Consumer product</option><option value="food">Food & beverage</option><option value="service">Services</option><option value="education">Education</option><option value="fashion">Fashion & beauty</option><option value="tech">Technology / digital</option></select></div>
-        <div class="field full"><label for="product">Product or service</label><input id="product" placeholder="What are you offering?" data-i18n-placeholder="planner.placeholder.product"></div>
+        <div class="field full"><label for="product">Product or service</label><input id="product" maxlength="500" placeholder="What are you offering?" data-i18n-placeholder="planner.placeholder.product"></div>
         <div class="field"><label for="audience">Target customers</label><select id="audience"><option value="students">University students</option><option value="young-professionals">Young professionals</option><option value="local-community">Local community</option><option value="families">Parents and families</option><option value="businesses">Businesses</option><option value="general">General consumers</option></select></div>
         <div class="field"><label for="goal">Main marketing objective</label><select id="goal"><option value="awareness">Build brand awareness</option><option value="engagement">Increase engagement</option><option value="leads">Generate leads / inquiries</option><option value="sales">Increase sales</option></select></div>
         <div class="field full"><label for="channels">Current marketing channels</label><select id="channels"><option value="none">Just starting — no channels yet</option><option value="social">Social media only</option><option value="marketplace">Marketplace / e-commerce</option><option value="mixed">Social media + other channels</option></select></div>
@@ -158,6 +158,22 @@
       </div>
       <div class="kpi-grid"><div class="kpi"><span>Suggested first test</span><strong id="kpiTest">7–14 days</strong></div><div class="kpi"><span>Primary metric</span><strong id="kpiMetric">Engagement</strong></div></div>
       <div class="priority-list" id="priorityList"><div class="priority"><b>01</b><span>Publish useful, consistent content for one clearly defined audience.</span></div><div class="priority"><b>02</b><span>Test one small paid campaign only after you have a clear message.</span></div><div class="priority"><b>03</b><span>Track inquiries and customer feedback—not likes alone.</span></div></div>
+      <section class="planner-ai-result" id="plannerAiResult" aria-labelledby="plannerAiTitle" hidden>
+        <div class="planner-ai-heading"><span class="eyebrow mono" data-i18n="planner.ai.eyebrow">GROWISE AI / PLAN</span><h3 id="plannerAiTitle" data-i18n="planner.ai.title">AI marketing plan</h3></div>
+        <p class="planner-ai-total" id="plannerAiTotal"></p>
+        <p class="planner-ai-status" id="plannerAiStatus" role="status" aria-live="polite" hidden></p>
+        <div class="planner-ai-error" id="plannerAiError" role="alert" hidden><span id="plannerAiErrorText"></span><button class="btn btn-ghost" id="plannerAiRetry" type="button" data-i18n="planner.ai.retry">Try AI again</button></div>
+        <div id="plannerAiContent" hidden>
+          <div class="planner-ai-section"><h4 data-i18n="planner.ai.allocations">Recommended budget allocation</h4><div class="planner-ai-allocation" id="plannerAiAllocation"></div></div>
+          <div class="planner-ai-section"><h4 data-i18n="planner.ai.explanation">Why this fits</h4><p id="plannerAiExplanation"></p></div>
+          <div class="planner-ai-section"><h4 data-i18n="planner.ai.channels">Recommended channels</h4><div class="planner-ai-list" id="plannerAiChannels"></div></div>
+          <div class="planner-ai-section"><h4 data-i18n="planner.ai.actionPlan">30-day action plan</h4><div class="planner-ai-list" id="plannerAiActions"></div></div>
+          <div class="planner-ai-section"><h4 data-i18n="planner.ai.kpis">Performance indicators</h4><div class="planner-ai-list" id="plannerAiKpis"></div></div>
+          <div class="planner-ai-section" id="plannerAiAssumptionsSection" hidden><h4 data-i18n="planner.ai.assumptions">Assumptions</h4><ul id="plannerAiAssumptions"></ul></div>
+          <p class="planner-ai-follow-up" id="plannerAiFollowUp" hidden></p>
+          <button class="btn btn-ghost" id="assistantShareAiPlan" type="button" data-i18n="planner.ai.share">Ask AI about this plan ↗</button>
+        </div>
+      </section>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px"><button class="btn btn-ghost" id="copyPlan">Copy plan summary ↗</button><button class="btn btn-ghost" id="downloadPlan">Download TXT ↗</button><button class="btn btn-ghost" id="assistantSharePlanner" type="button" data-i18n="assistant.sharePlanner">Ask AI to review this plan ↗</button><a class="btn btn-ghost" href="#resources" data-page="resources">Explore practical guides ↗</a><a class="btn btn-ghost" href="#consultation" data-page="consultation">Get support ↗</a></div>
       <div class="notice">Educational draft only: this planner applies fixed starting assumptions. It is not a revenue forecast, financial advice, or a guarantee of campaign results. Check the allocation against your actual costs, margins, customer evidence, and campaign data before spending.</div>
     </div>

@@ -54,6 +54,73 @@ function userMessage(text = "How should I market my student startup?") {
   return { messages: [{ role: "user", text }] };
 }
 
+function exactAmounts(total, percentages) {
+  const amounts = percentages.map((percentage) => Math.floor(total * percentage / 100));
+  let remainder = total - amounts.reduce((sum, amount) => sum + amount, 0);
+  const order = percentages
+    .map((percentage, index) => ({ index, fraction: (total * percentage) % 100 }))
+    .sort((left, right) => right.fraction - left.fraction || left.index - right.index);
+  for (let index = 0; remainder > 0; index += 1, remainder -= 1) {
+    amounts[order[index % order.length].index] += 1;
+  }
+  return amounts;
+}
+
+function budgetPlanRequest(options = {}) {
+  const amount = options.budget || 1_000_000;
+  const percentages = [40, 25, 20, 15];
+  const amounts = exactAmounts(amount, percentages);
+  return request({
+    mode: "budget_plan",
+    plan: {
+      startupName: "Moc Bakery",
+      product: "Small-batch bread",
+      industry: "food",
+      audience: "students",
+      budget: amount,
+      objective: "awareness",
+      channels: "social",
+      locale: "en",
+      baselineAllocations: ["content", "promotion", "research", "reserve"].map(
+        (category, index) => ({
+          category,
+          percentage: percentages[index],
+          amount: amounts[index]
+        })
+      )
+    }
+  });
+}
+
+function validBudgetPlan(overrides = {}) {
+  return {
+    allocations: [
+      { activity: "Create short-form content", percentage: 33, rationale: "Reuse product stories.", objective: "Build awareness." },
+      { activity: "Small content test", percentage: 33, rationale: "Compare two messages.", objective: "Learn what resonates." },
+      { activity: "Customer interviews", percentage: 34, rationale: "Hear customer feedback.", objective: "Improve positioning." }
+    ],
+    channels: [
+      { name: "Social media", why: "Visual product discovery.", advantages: "Organic reach.", limitations: "Requires consistency.", lowBudgetStart: "Post three useful formats." },
+      { name: "Campus groups", why: "Relevant student audience.", advantages: "Direct feedback.", limitations: "Participation varies.", lowBudgetStart: "Ask permission before sharing." }
+    ],
+    actionPlan: [
+      { week: "Week 1", action: "Interview potential customers.", priority: 1, budgetPercentage: 25, measure: "Record repeated needs." },
+      { week: "Week 2", action: "Publish two content formats.", priority: 2, budgetPercentage: 25, measure: "Compare saves and replies." },
+      { week: "Week 3", action: "Run a small message test.", priority: 3, budgetPercentage: 25, measure: "Track relevant visits." },
+      { week: "Week 4", action: "Review evidence and adjust.", priority: 4, budgetPercentage: 25, measure: "Document learnings." }
+    ],
+    kpis: [
+      { name: "Relevant reach", why: "Signals exposure.", howToTrack: "Review platform insights." },
+      { name: "Meaningful engagement", why: "Signals interest.", howToTrack: "Compare saves and replies." },
+      { name: "Qualified inquiries", why: "Connects activity to demand.", howToTrack: "Log inquiry sources." }
+    ],
+    explanation: "This plan starts with low-cost learning before expanding spend.",
+    assumptions: ["The team can create basic content in-house."],
+    followUpQuestion: "Which product makes customers choose you?",
+    ...overrides
+  };
+}
+
 test("sends a bounded conversation to Gemini using the API-key header", async () => {
   let call;
   const result = await handleAssistantRequest(request(userMessage()), dependencies({
@@ -309,4 +376,126 @@ test("does not turn unexpected exceptions into a successful response", async () 
 
   assert.equal(result.status, 503);
   assert.equal((await result.json()).error, "rate_limit_unavailable");
+});
+
+test("returns a validated AI plan with exact VND allocations and preserves the chat contract", async () => {
+  const amount = 201_001;
+  let geminiRequest;
+  const result = await handleAssistantRequest(budgetPlanRequest({ budget: amount }), dependencies({
+    fetcher: async (_url, init) => {
+      geminiRequest = JSON.parse(init.body);
+      return new Response(JSON.stringify({
+        candidates: [{ content: { parts: [{ text: JSON.stringify(validBudgetPlan()) }] } }]
+      }), { status: 200 });
+    }
+  }));
+  const payload = await result.json();
+  const plan = payload.plan;
+
+  assert.equal(result.status, 200);
+  assert.equal(plan.budget, amount);
+  assert.equal(plan.allocations.reduce((sum, item) => sum + item.amount, 0), amount);
+  assert.equal(plan.actionPlan.reduce((sum, item) => sum + item.budgetAmount, 0), amount);
+  assert.deepEqual(
+    plan.allocations.map(({ amount: allocationAmount }) => allocationAmount),
+    exactAmounts(amount, [33, 33, 34])
+  );
+  assert.deepEqual(
+    plan.actionPlan.map(({ budgetAmount }) => budgetAmount),
+    exactAmounts(amount, [25, 25, 25, 25])
+  );
+  assert.equal(geminiRequest.generationConfig.responseMimeType, "application/json");
+  assert.equal(geminiRequest.generationConfig.maxOutputTokens, 2_000);
+  assert.match(geminiRequest.systemInstruction.parts[0].text, /Do not include money amounts/);
+  assert.equal(JSON.stringify(payload).includes(testApiKey), false);
+});
+
+test("keeps allocations within the maximum planner budget", async () => {
+  const amount = 10_000_000;
+  const result = await handleAssistantRequest(budgetPlanRequest({ budget: amount }), dependencies({
+    fetcher: async () => new Response(JSON.stringify({
+      candidates: [{ content: { parts: [{ text: JSON.stringify(validBudgetPlan()) }] } }]
+    }), { status: 200 })
+  }));
+  const payload = await result.json();
+
+  assert.equal(result.status, 200);
+  assert.equal(payload.plan.allocations.reduce((sum, item) => sum + item.amount, 0), amount);
+  assert.ok(payload.plan.allocations.every((item) => item.amount <= amount));
+  assert.equal(payload.plan.actionPlan.reduce((sum, item) => sum + item.budgetAmount, 0), amount);
+});
+
+test("rejects incomplete budget inputs and inconsistent baseline math before Gemini", async () => {
+  let called = false;
+  const body = await budgetPlanRequest().json();
+  delete body.plan.product;
+  const missingField = await handleAssistantRequest(request(body), dependencies({
+    fetcher: async () => {
+      called = true;
+      return new Response();
+    }
+  }));
+
+  const invalidBody = await budgetPlanRequest().json();
+  invalidBody.plan.baselineAllocations[0].amount += 1;
+  const wrongBaseline = await handleAssistantRequest(request(invalidBody), dependencies({
+    fetcher: async () => {
+      called = true;
+      return new Response();
+    }
+  }));
+
+  assert.equal(missingField.status, 400);
+  assert.equal(wrongBaseline.status, 400);
+  assert.equal(called, false);
+});
+
+test("rejects malformed JSON and allocation percentages that do not total 100", async () => {
+  const malformedJson = await handleAssistantRequest(budgetPlanRequest(), dependencies({
+    fetcher: async () => new Response(JSON.stringify({
+      candidates: [{ content: { parts: [{ text: "{not json}" }] } }]
+    }), { status: 200 })
+  }));
+  const wrongTotal = await handleAssistantRequest(budgetPlanRequest(), dependencies({
+    fetcher: async () => new Response(JSON.stringify({
+      candidates: [{
+        content: { parts: [{ text: JSON.stringify(validBudgetPlan({
+          allocations: validBudgetPlan().allocations.map((item, index) => ({
+            ...item,
+            percentage: index === 0 ? 32 : item.percentage
+          }))
+        })) }] }
+      }]
+    }), { status: 200 })
+  }));
+
+  assert.equal(malformedJson.status, 502);
+  assert.equal((await malformedJson.json()).error, "invalid_ai_plan");
+  assert.equal(wrongTotal.status, 502);
+  assert.equal((await wrongTotal.json()).error, "invalid_ai_plan");
+});
+
+test("maps budget-plan quota and timeout failures to explicit errors", async () => {
+  const quota = await handleAssistantRequest(budgetPlanRequest(), dependencies({
+    fetcher: async () => new Response(JSON.stringify({
+      error: { status: "RESOURCE_EXHAUSTED", message: `private ${testApiKey}` }
+    }), { status: 429 })
+  }));
+  const timeout = await handleAssistantRequest(budgetPlanRequest(), dependencies({
+    timeoutMs: 5,
+    fetcher: (_url, init) => new Promise((_resolve, reject) => {
+      init.signal.addEventListener("abort", () => {
+        const error = new Error("aborted");
+        error.name = "AbortError";
+        reject(error);
+      });
+    })
+  }));
+  const quotaPayload = await quota.json();
+
+  assert.equal(quota.status, 429);
+  assert.equal(quotaPayload.error, "quota_exceeded");
+  assert.equal(JSON.stringify(quotaPayload).includes(testApiKey), false);
+  assert.equal(timeout.status, 504);
+  assert.equal((await timeout.json()).error, "request_timeout");
 });

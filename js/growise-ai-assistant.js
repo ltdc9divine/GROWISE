@@ -19,6 +19,7 @@
   let requestController = null;
   let requestRevision = 0;
   let busy = false;
+  let latestPlannerContext = null;
 
   function loadHistory() {
     try {
@@ -261,32 +262,74 @@
     requestReply(message);
   });
 
-  sharePlannerButton.addEventListener("click", () => {
-    const selectedText = (id) => {
-      const select = document.getElementById(id);
-      return select.options[select.selectedIndex]?.textContent?.trim() || "";
-    };
-    const allocations = [...document.querySelectorAll("#allocation .alloc-row")]
-      .map((row) => `${row.children[0].textContent.trim()}: ${row.children[2].textContent.trim()}`)
-      .join("; ");
-    const priorities = [...document.querySelectorAll("#priorityList .priority span")]
-      .map((item) => item.textContent.trim())
-      .join("; ");
-    const prompt = i18n.t("assistant.plannerPrompt", {
-      industry: selectedText("industry"),
-      audience: selectedText("audience"),
-      budget: document.getElementById("budgetDisplay").textContent.trim(),
-      goal: selectedText("goal"),
-      channels: selectedText("channels"),
-      allocations,
-      metric: document.getElementById("kpiMetric").textContent.trim(),
-      priorities
-    });
+  function selectedText(id) {
+    const select = document.getElementById(id);
+    return select.options[select.selectedIndex]?.textContent?.trim() || "";
+  }
+
+  function sharePlannerContext() {
+    const context = latestPlannerContext;
+    if (context?.plan && context?.inputs) {
+      const { plan, inputs } = context;
+      const shorten = (value, maximumLength) => {
+        const text = typeof value === "string" ? value.trim() : "";
+        return text.length > maximumLength ? `${text.slice(0, maximumLength - 1)}…` : text;
+      };
+      const allocations = plan.allocations.map((item) =>
+        `${shorten(item.activity, 48)} ${item.percentage}% (${item.amount.toLocaleString("vi-VN")} VND)`
+      ).join("; ");
+      const channels = plan.channels.map((item) =>
+        `${shorten(item.name, 36)}: ${shorten(item.why, 55)}`
+      ).join("; ");
+      const actions = plan.actionPlan
+        .slice()
+        .sort((left, right) => left.priority - right.priority)
+        .map((item) => `${shorten(item.week, 24)}: ${shorten(item.action, 62)}`)
+        .join("; ");
+      const kpis = plan.kpis.map((item) => shorten(item.name, 32)).join(", ");
+      const prompt = i18n.t("assistant.plannerAiPrompt", {
+        startup: shorten(inputs.startupName || "not provided", 70),
+        product: shorten(inputs.product || "not provided", 100),
+        industry: selectedText("industry"),
+        audience: selectedText("audience"),
+        objective: selectedText("goal"),
+        channels: selectedText("channels"),
+        budget: document.getElementById("budgetDisplay").textContent.trim(),
+        allocations: shorten(allocations, 500),
+        channelsPlan: shorten(channels, 230),
+        actions: shorten(actions, 260),
+        kpis: shorten(kpis, 180),
+        explanation: shorten(plan.explanation, 180)
+      });
+      input.value = prompt.length > 1900 ? `${prompt.slice(0, 1899)}…` : prompt;
+    } else {
+      const allocations = [...document.querySelectorAll("#allocation .alloc-row")]
+        .map((row) => `${row.children[0].textContent.trim()}: ${row.children[2].textContent.trim()}`)
+        .join("; ");
+      const priorities = [...document.querySelectorAll("#priorityList .priority span")]
+        .map((item) => item.textContent.trim())
+        .join("; ");
+      input.value = i18n.t("assistant.plannerPrompt", {
+        industry: selectedText("industry"),
+        audience: selectedText("audience"),
+        budget: document.getElementById("budgetDisplay").textContent.trim(),
+        goal: selectedText("goal"),
+        channels: selectedText("channels"),
+        allocations,
+        metric: document.getElementById("kpiMetric").textContent.trim(),
+        priorities
+      });
+    }
 
     openPanel();
-    input.value = prompt;
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
+  }
+
+  sharePlannerButton.addEventListener("click", sharePlannerContext);
+  document.getElementById("assistantShareAiPlan").addEventListener("click", sharePlannerContext);
+  document.addEventListener("growise:planner-plan-updated", (event) => {
+    latestPlannerContext = event.detail;
   });
 
   document.addEventListener("keydown", (event) => {

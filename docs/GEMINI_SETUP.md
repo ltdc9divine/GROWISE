@@ -60,24 +60,40 @@ minute per IP) and does not use a database. Isolates can scale independently,
 so staging/production should also enforce a shared gateway or WAF rate limit
 and usage budget before public launch. No database changes are required.
 
-The Edge Function uses the Gemini 3 `MINIMAL` thinking level, allows 20 seconds
-for generation (then up to 10 seconds to list supported alternatives), and
-caps answers at 700 output tokens so reasoning does not crowd out the answer.
+The Edge Function uses the Gemini 3 `MINIMAL` thinking level and allows 20
+seconds for generation (then up to 10 seconds to list supported alternatives).
+Chat replies are capped at 700 output tokens; structured budget plans have a
+2,000-token cap.
 
 ## Data sent to Gemini
 
-Only the messages in the chat conversation are sent. Conversation history is
-kept in browser `sessionStorage` and is not written to Supabase. Consultation,
-feedback, authentication, and student records are not read or sent. The Budget
-Planner has an explicit “Ask AI to review this plan” action that drafts a
-message containing the selected industry, audience, budget, goal, channels,
-allocation, metric, and priorities; it is sent only after the user presses
-Send. Startup name and product/service fields are excluded.
+Chat messages and bounded chat history are sent only when the user presses
+Send. Conversation history is kept in browser `sessionStorage` and is not
+written to Supabase. Consultation, feedback, authentication, and student
+records are not read or sent.
+
+The Budget Planner keeps its existing client-side calculation. Its Generate
+button first refreshes that calculation, then explicitly sends the planner
+fields (startup name, product/service, industry, target audience, budget,
+objective, current channels, locale, and the baseline allocation) to the
+`budget_plan` mode of the same Edge Function. It does not send while fields are
+being edited. Gemini returns structured percentages and strategy only; the
+Edge Function calculates all VND amounts and verifies totals before returning
+the plan. The browser independently checks percentages and amounts. AI errors
+leave the basic plan and entered fields intact.
+
+AI plan results are not saved to a database. The “Ask AI about this plan”
+button, or the existing “Ask AI to review this plan” button, explicitly copies
+a concise plan context into the chat draft. It is not sent until the user
+presses Send. Changing a planner input invalidates the previous AI result.
 
 ## Validation status
 
-Mock tests cover request validation, errors, timeouts, model discovery, and rate
-limits. The local key's Models API returned `gemini-3.8-flash` as supporting
+Mock tests cover chat and budget-plan validation, exact allocation math,
+malformed responses, quota errors, timeouts, model discovery, and rate limits.
+The local key's Models API returned `gemini-3.8-flash` as supporting
 `generateContent`, but a real generation request reported temporary capacity
-unavailability. A real request using the same API key succeeded with
-`gemini-3.5-flash`. Confirm the configured model before deploying the frontend.
+unavailability. A real chat request using the same API key succeeded with
+`gemini-3.5-flash`. The Budget Planner extension has only been tested against a
+mock API response; it has not been deployed or verified against a live Gemini
+request. Configure and test it in local/staging before use.

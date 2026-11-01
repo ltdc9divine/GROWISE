@@ -24,7 +24,7 @@ All pages are sections in [`index.html`](../index.html), selected by the hash ro
 | `#home` | Home | Marketing-support introduction, animated 3D particle orb, challenge/purpose content, “Why Growise?”, toolkit cards, and calls to the planner, services, About, and consultation. |
 | `#about` | About Us | Project story and research topic, mission, vision, principles, intended audience, and a transparent team-information note. Verified member names and responsibilities have not been supplied. |
 | `#services` | Services | Four proposed areas: marketing strategy consultation, marketing-plan development, budget optimization, and campaign-performance review. Descriptions qualify scope and avoid claiming proven outcomes; calls to action lead to Consultation or Planner. |
-| `#planner` | Budget Planner | Seven inputs; client-side illustrative allocation, contextual priorities, a test-duration and metric suggestion, low-budget guidance, copy and TXT download. |
+| `#planner` | Budget Planner | Seven inputs; existing client-side illustrative allocation and priorities; optional, user-triggered Gemini strategy, allocations, channels, 30-day actions and KPIs; copy and TXT download. |
 | `#resources` | Resources | Four filters (strategy, budgeting, content, measurement), six guide cards, article modal, language switcher, and a link from the modal to Planner. The required instructor reference for the categories was not found. |
 | `#consultation` | Consultation | Nine form fields, validation, and an in-browser demo confirmation. No submission is sent and no appointment is booked. |
 | `#feedback` | Feedback | Separate page with a feedback hero, seven required star-rating groups, three optional text areas, validation, and a one-time client-side thank-you state. Feedback is not saved or sent. |
@@ -68,9 +68,11 @@ Seven controls are in the Planner form:
 
 The page also generates up to five heuristic priorities from channel, audience, industry, and objective; a fixed 7–14-day first-test suggestion; an objective-based primary metric; and budget-band copy for amounts up to 500,000, up to 2,000,000, and above 2,000,000 VND. Copy and TXT download build a summary in the browser.
 
+After the user presses Generate, the existing draft is refreshed and the selected planner inputs plus baseline calculation are sent to the existing `growise-ai-assistant` Edge Function using its `budget_plan` request mode. Gemini proposes allocation percentages and strategy; the backend calculates exact VND amounts and validates all percentages and totals. The basic calculation is not replaced if AI fails. Inputs changing invalidate the prior AI result. An explicit share button drafts context in Growise AI chat and requires a separate Send action.
+
 ### Limitations
 
-These are fixed heuristics, not research-derived recommendations or a prediction of outcomes. They do not model actual costs, margins, revenue, or campaign data. The interface itself warns users to validate assumptions before spending. The application does not send Planner inputs to a server.
+The basic results are fixed heuristics, not research-derived recommendations or a prediction of outcomes. They do not model actual costs, margins, revenue, or campaign data. AI recommendations are also suggestions, not forecasts or guarantees. Planner inputs are sent to Gemini only after the user presses Generate; results are not saved to a database. Consultation, feedback, authentication, and student records are not sent. The AI integration is local code and its budget-plan path has only been verified with mock responses; it must be tested in staging before deployment.
 
 ## 6. Consultation and Feedback forms
 
@@ -100,7 +102,9 @@ Responsive rules are present at 1100, 900, 680, and 390 CSS pixels; the mobile n
 |---|---|
 | [`js/translations.js`](../js/translations.js) | VI/EN catalogs, source-text translation, DOM attributes, locale persistence and change events, localized article data. |
 | [`js/main.js`](../js/main.js) | Seven-route hash navigation, mobile navigation, Resources modal and filters, consultation validation/demo confirmation, feedback stars/validation/success, and toast messages. |
-| [`js/budget-planner.js`](../js/budget-planner.js) | Planner allocations, recommendations, localized output, copy, and TXT download. |
+| [`js/budget-planner.js`](../js/budget-planner.js) | Existing Planner calculations, AI request/validation/rendering, localized output, and copy/TXT download. |
+| [`js/growise-ai-assistant.js`](../js/growise-ai-assistant.js) | Chat session, Gemini requests, and user-triggered planner-context draft sharing. |
+| [`supabase/functions/growise-ai-assistant/core.mjs`](../supabase/functions/growise-ai-assistant/core.mjs) | Validates chat and structured budget-plan requests and responses, invokes Gemini, and computes verified VND allocations. |
 | [`js/particle-orb.js`](../js/particle-orb.js) | Home's interactive animated canvas orb. |
 | [`js/subpage-orbits.js`](../js/subpage-orbits.js) | Five distinct animated subpage canvas scenes and lifecycle handling. |
 | [`js/supabase-config.js`](../js/supabase-config.js) | Owner-supplied public Supabase URL, publishable key, and site origin. |
@@ -156,7 +160,7 @@ These statuses carry forward the latest website audit. The auth files were added
 | Home | **PARTIAL** | Hero, challenge/purpose-related content, Why Growise, toolkit and calls to action exist. The requested “Our Purpose” and “Our Services” are not separate named sections. |
 | About Us | **PARTIAL** | Story, mission, vision, audience, and team note exist. Verified member names and responsibilities remain unavailable. |
 | Services | **PASS** | Four qualified service descriptions, potential benefits, and relevant calls to action are present. |
-| Budget Planner | **PASS** | Seven inputs, 100% illustrative allocation, priorities, metrics, test interval, low-budget guidance, and copy/download exist. |
+| Budget Planner | **PARTIAL** | Existing calculation remains intact; structured AI recommendations, exact VND reconciliation, error fallback, and opt-in chat sharing pass mock/UI checks. Live Gemini budget-plan generation is not deployed or verified. |
 | Resources | **UNVERIFIED** | Four categories and six substantive guides exist, but the instructor's required category reference was not found. |
 | Consultation | **PARTIAL** | Validation and success/demo messaging work. The current form has nine fields while the earlier checklist requested eight; no field was removed without clarification. |
 | Feedback | **PASS** | Three steps, seven required ratings, three optional questions, validation, thank-you state, and independent route work. No server persistence is claimed. |
