@@ -261,7 +261,7 @@ test("reconciles allocation math for minimum and maximum planner budgets", async
 test("rejects incomplete planner inputs and inconsistent baseline math before calling Groq", async () => {
   let called = false;
   const missingBody = await budgetPlanRequest().json();
-  delete missingBody.plan.product;
+  delete missingBody.plan.industry;
   const missing = await handleAssistantRequest(request(missingBody), dependencies({
     fetcher: async () => {
       called = true;
@@ -280,6 +280,27 @@ test("rejects incomplete planner inputs and inconsistent baseline math before ca
   assert.equal(missing.status, 400);
   assert.equal(wrongBaseline.status, 400);
   assert.equal(called, false);
+});
+
+test("accepts older planner clients without baseline allocations and ignores extra fields", async () => {
+  const body = await budgetPlanRequest({ budget: 1_100_000 }).json();
+  delete body.plan.baselineAllocations;
+  body.plan.futureClientField = "must not be forwarded";
+  body.unused = "must not be forwarded";
+  let prompt;
+  const result = await handleAssistantRequest(request(body), dependencies({
+    fetcher: async (_url, init) => {
+      prompt = JSON.parse(init.body).messages[1].content;
+      return groqReply(JSON.stringify(validBudgetPlan()));
+    }
+  }));
+  const payload = await result.json();
+
+  assert.equal(result.status, 200);
+  assert.equal(payload.plan.budget, 1_100_000);
+  assert.match(prompt, /Existing planner calculation/);
+  assert.match(prompt, /"percentage":45/);
+  assert.equal(prompt.includes("must not be forwarded"), false);
 });
 
 test("rejects malformed or incomplete Groq planner JSON", async () => {

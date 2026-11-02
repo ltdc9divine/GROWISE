@@ -241,6 +241,7 @@
   }
 
   function aiErrorKey(code, status) {
+    if (code === "invalid_request") return "planner.ai.error.invalidRequest";
     if (code === "quota_exceeded") return "planner.ai.error.quota";
     if (code === "request_timeout" || status === 504) return "planner.ai.error.timeout";
     if (code === "invalid_ai_plan" || code === "invalid_response") {

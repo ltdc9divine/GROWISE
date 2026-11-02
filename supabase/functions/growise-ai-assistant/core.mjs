@@ -208,6 +208,17 @@ function exactAmounts(total, percentages) {
   return amounts;
 }
 
+function baselinePercentages(industry, objective) {
+  let percentages = [40, 25, 20, 15];
+  if (industry === "food") percentages = [35, 25, 25, 15];
+  if (industry === "service" || industry === "education") percentages = [35, 15, 30, 20];
+  if (industry === "fashion") percentages = [40, 30, 15, 15];
+  if (objective === "awareness") percentages = [45, 25, 15, 15];
+  if (objective === "leads") percentages = [30, 25, 25, 20];
+  if (objective === "sales") percentages = [30, 30, 20, 20];
+  return percentages;
+}
+
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -221,34 +232,19 @@ function boundedText(value, maximumLength, { optional = false } = {}) {
 
 function validateBudgetPlanInput(body) {
   if (
-    Object.keys(body).length !== 2
-    || body.mode !== "budget_plan"
+    body.mode !== "budget_plan"
     || !isRecord(body.plan)
   ) {
     throw new AssistantRequestError(400, "invalid_request");
   }
 
   const plan = body.plan;
-  const expectedKeys = [
-    "startupName",
-    "product",
-    "industry",
-    "audience",
-    "budget",
-    "objective",
-    "channels",
-    "locale",
-    "baselineAllocations"
-  ];
-  if (
-    Object.keys(plan).length !== expectedKeys.length
-    || expectedKeys.some((key) => !Object.hasOwn(plan, key))
-  ) {
-    throw new AssistantRequestError(400, "invalid_request");
-  }
-
-  const startupName = boundedText(plan.startupName, 120, { optional: true });
-  const product = boundedText(plan.product, 500, { optional: true });
+  const optionalText = (value, limit) => {
+    if (value === undefined) return "";
+    return boundedText(value, limit, { optional: true });
+  };
+  const startupName = optionalText(plan.startupName, 120);
+  const product = optionalText(plan.product, 500);
   const amount = plan.budget;
   if (
     startupName === null
@@ -261,40 +257,52 @@ function validateBudgetPlanInput(body) {
     || !Number.isSafeInteger(amount)
     || amount < 200_000
     || amount > 10_000_000
-    || !Array.isArray(plan.baselineAllocations)
-    || plan.baselineAllocations.length !== BASELINE_CATEGORIES.length
   ) {
     throw new AssistantRequestError(400, "invalid_request");
   }
 
-  const baselineAllocations = plan.baselineAllocations.map((allocation, index) => {
-    if (
-      !isRecord(allocation)
-      || Object.keys(allocation).length !== 3
-      || allocation.category !== BASELINE_CATEGORIES[index]
-      || !Number.isInteger(allocation.percentage)
-      || allocation.percentage < 0
-      || allocation.percentage > 100
-      || !Number.isSafeInteger(allocation.amount)
-      || allocation.amount < 0
-    ) {
-      throw new AssistantRequestError(400, "invalid_request");
-    }
-    return {
-      category: allocation.category,
-      percentage: allocation.percentage,
-      amount: allocation.amount
-    };
-  });
+  const suppliedAllocations = plan.baselineAllocations;
+  if (
+    suppliedAllocations !== undefined
+    && (!Array.isArray(suppliedAllocations)
+      || suppliedAllocations.length !== BASELINE_CATEGORIES.length)
+  ) {
+    throw new AssistantRequestError(400, "invalid_request");
+  }
 
-  const percentages = baselineAllocations.map(({ percentage }) => percentage);
+  const percentages = suppliedAllocations === undefined
+    ? baselinePercentages(plan.industry, plan.objective)
+    : suppliedAllocations.map((allocation, index) => {
+        if (
+          !isRecord(allocation)
+          || Object.keys(allocation).length !== 3
+          || allocation.category !== BASELINE_CATEGORIES[index]
+          || !Number.isInteger(allocation.percentage)
+          || allocation.percentage < 0
+          || allocation.percentage > 100
+          || !Number.isSafeInteger(allocation.amount)
+          || allocation.amount < 0
+        ) {
+          throw new AssistantRequestError(400, "invalid_request");
+        }
+        return allocation.percentage;
+      });
+
   const amounts = exactAmounts(amount, percentages);
   if (
     percentages.reduce((sum, percentage) => sum + percentage, 0) !== 100
-    || amounts.some((expected, index) => expected !== baselineAllocations[index].amount)
+    || (suppliedAllocations !== undefined && suppliedAllocations.some((allocation, index) =>
+      amounts[index] !== allocation.amount
+    ))
   ) {
     throw new AssistantRequestError(400, "invalid_request");
   }
+
+  const baselineAllocations = BASELINE_CATEGORIES.map((category, index) => ({
+    category,
+    percentage: percentages[index],
+    amount: amounts[index]
+  }));
 
   return {
     startupName,
