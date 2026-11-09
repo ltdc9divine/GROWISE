@@ -13,7 +13,7 @@
       ? `${config.url.replace(/\/+$/, "")}/functions/v1/submit-website-form`
       : null;
 
-    async function submit(action, payload) {
+    async function submit(action, payload, session = null, student = null) {
       if (!["consultation", "feedback"].includes(action)) {
         throw new FormSubmissionError("invalid_form");
       }
@@ -23,13 +23,24 @@
 
       let response;
       try {
+        const headers = {
+          apikey: config.publishableKey,
+          "Content-Type": "application/json"
+        };
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
+        const requestPayload = { ...payload, action };
+        if (!session?.access_token && student?.full_name && student?.username) {
+          requestPayload.student_identity = {
+            full_name: student.full_name,
+            username: student.username
+          };
+        }
         response = await fetcher(endpoint, {
           method: "POST",
-          headers: {
-            apikey: config.publishableKey,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ ...payload, action })
+          headers,
+          body: JSON.stringify(requestPayload)
         });
       } catch {
         throw new FormSubmissionError("network_error");

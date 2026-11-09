@@ -198,7 +198,7 @@ feedbackForm.addEventListener('submit',async event=>{
    liked:document.getElementById('feedbackLiked').value,
    improve:document.getElementById('feedbackImprove').value,
    requested_features:document.getElementById('feedbackFeatures').value
-  });
+  },window.Growise.auth?.getSession(),window.Growise.auth?.getFeedbackIdentity()?.student);
   feedbackSubmitted=true;
   feedbackForm.hidden=true;
   document.getElementById('feedbackComplete').hidden=false;

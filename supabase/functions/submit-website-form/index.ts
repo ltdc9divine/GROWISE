@@ -5,7 +5,8 @@ import {
   isAllowedOrigin,
   jsonResponse,
   readJson,
-  RequestError
+  RequestError,
+  requireAuthenticatedUser
 } from "../_shared/auth.ts";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,6 +41,51 @@ const ratingFields = [
 
 function isString(value: unknown): value is string {
   return typeof value === "string";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeStudentName(value: string): string {
+  return value.normalize("NFC").trim().replace(/\s+/gu, " ");
+}
+
+async function findFeedbackStudent(value: unknown): Promise<string | null> {
+  if (value === undefined) return null;
+  if (
+    !isRecord(value)
+    || Object.keys(value).some((key) => key !== "full_name" && key !== "username")
+    || !isString(value.full_name)
+    || !isString(value.username)
+  ) {
+    throw new RequestError(400, "invalid_form");
+  }
+  const fullName = normalizeStudentName(value.full_name);
+  const username = value.username.normalize("NFC").trim().toLowerCase();
+  if (
+    !fullName
+    || fullName.length > 200
+    || username.length > 64
+    || !/^[a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]+-[a-z0-9]+$/u.test(username)
+  ) {
+    throw new RequestError(400, "invalid_form");
+  }
+
+  const { data, error } = await createServiceClient()
+    .from("growise_users")
+    .select("id,full_name")
+    .eq("username", username)
+    .maybeSingle();
+  if (error) throw new RequestError(503, "submission_unavailable");
+  if (
+    !data
+    || normalizeStudentName(data.full_name).toLocaleLowerCase("vi-VN")
+      !== fullName.toLocaleLowerCase("vi-VN")
+  ) {
+    throw new RequestError(401, "identity_mismatch");
+  }
+  return data.id;
 }
 
 function optionalText(value: unknown, maximum: number): string | null {
@@ -161,7 +207,8 @@ function validateFeedback(body: Record<string, unknown>) {
     "ratings",
     "liked",
     "improve",
-    "requested_features"
+    "requested_features",
+    "student_identity"
   ]);
   if (
     Object.keys(body).some((key) => !allowedFields.has(key))
@@ -217,9 +264,24 @@ Deno.serve(async (request) => {
     }
 
     const isConsultation = body.action === "consultation";
-    const submission = isConsultation
-      ? validateConsultation(body)
-      : validateFeedback(body);
+    let submission: Record<string, unknown>;
+    if (isConsultation) {
+      submission = validateConsultation(body);
+    } else {
+      const feedback = validateFeedback(body);
+      const authorization = request.headers.get("Authorization");
+      const submittedBy = authorization
+        ? (await requireAuthenticatedUser(request)).user.id
+        : null;
+      const submittedByStudent = authorization
+        ? null
+        : await findFeedbackStudent(body.student_identity);
+      submission = {
+        ...feedback,
+        submitted_by: submittedBy,
+        submitted_by_student: submittedByStudent
+      };
+    }
     await consumeRateLimit(request);
 
     const client = createServiceClient();

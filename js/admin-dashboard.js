@@ -141,6 +141,7 @@
       ],
       feedback: [
         ["adminDashboard.recordId", "id"],
+        ["adminDashboard.sender", "sender_name"],
         ...ratingFields.map(([field, labelKey]) => [labelKey, field]),
         ["adminDashboard.liked", "liked"],
         ["adminDashboard.improve", "improve"],
@@ -151,7 +152,11 @@
     if (!columns) throw new Error("dashboard_export_section_invalid");
 
     const headers = columns.map(([labelKey]) => i18n.t(labelKey));
-    const rows = records.map((record) => columns.map(([, field]) => record[field]));
+    const rows = records.map((record) => columns.map(([, field]) => (
+      field === "sender_name"
+        ? record.sender_name || i18n.t("adminDashboard.anonymous")
+        : record[field]
+    )));
     return [headers, ...rows];
   }
 
@@ -361,7 +366,10 @@
     const article = document.createElement("article");
     article.className = "admin-dashboard-record";
     article.append(
-      makeText("h4", i18n.t("adminDashboard.anonymous")),
+      makeText(
+        "h4",
+        record.sender_name || i18n.t("adminDashboard.anonymous")
+      ),
       makeText("p", `${i18n.t("adminDashboard.createdAt")}: ${dateText(record.created_at)}`)
     );
     const details = document.createElement("details");

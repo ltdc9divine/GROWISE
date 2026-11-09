@@ -791,7 +791,11 @@
     normalizeUsername: usernames.normalizeUsername,
     normalizeLoginUsername,
     open: openModal,
-    getSession: () => currentSession
+    getSession: () => currentSession,
+    getFeedbackIdentity: () => ({
+      session: currentSession,
+      student: currentStudent
+    })
   };
   setNavigationLabel();
 })();

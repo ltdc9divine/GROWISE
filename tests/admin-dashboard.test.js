@@ -43,7 +43,7 @@ test("admin dashboard export includes the fields for each selected data section"
     },
     feedback: {
       expectedHeader: "adminDashboard.rating.overall",
-      record: { id: "3", overall_rating: 5, liked: "Useful" }
+      record: { id: "3", sender_name: "Trâm", overall_rating: 5, liked: "Useful" }
     }
   };
 
@@ -52,7 +52,12 @@ test("admin dashboard export includes the fields for each selected data section"
     assert.ok(headers.includes(expectedHeader));
     assert.equal(values[0], record.id);
     assert.equal(values.length, headers.length);
+    if (section === "feedback") {
+      assert.equal(values[1], "Trâm");
+    }
   }
+  const [, anonymousValues] = dashboardApi.exportRows("feedback", [{ id: "4" }]);
+  assert.equal(anonymousValues[1], "adminDashboard.anonymous");
 });
 
 test("admin dashboard client sends authenticated GET requests using only the publishable key", async () => {
@@ -138,6 +143,10 @@ test("admin dashboard Edge Function is read-only and verifies admin server-side"
   assert.match(functionSource, /consultations_by_industry/);
   assert.match(functionSource, /activity_by_month/);
   assert.match(functionSource, /getFeedbackAverages/);
+  assert.match(functionSource, /submitted_by/);
+  assert.match(functionSource, /submitted_by_student/);
+  assert.match(functionSource, /\.from\("growise_profiles"\)[\s\S]*?sender_name/);
+  assert.match(functionSource, /\.from\("growise_users"\)[\s\S]*?sender_name/);
   for (const field of [
     "full_name", "username", "student_id", "updated_at",
     "email", "startup_name", "industry", "monthly_budget",
@@ -154,7 +163,7 @@ test("admin dashboard Edge Function is read-only and verifies admin server-side"
   assert.match(config, /\[functions\.admin-dashboard-data\]\s+verify_jwt = false/);
 });
 
-test("dashboard labels expose anonymous feedback and explicitly avoid login history claims", () => {
+test("dashboard labels distinguish identified and anonymous feedback without implying login history", () => {
   const html = readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   const client = readFileSync(
     path.join(__dirname, "..", "js", "admin-dashboard.js"),
@@ -169,6 +178,8 @@ test("dashboard labels expose anonymous feedback and explicitly avoid login hist
   assert.match(html, /data-dashboard-section="consultations"/);
   assert.match(html, /data-dashboard-section="feedback"/);
   assert.match(client, /adminDashboard\.anonymous/);
+  assert.match(client, /record\.sender_name/);
+  assert.match(client, /adminDashboard\.sender/);
   assert.match(client, /created_at/);
   assert.doesNotMatch(client, /login_count|last_login|sign_in_count/i);
   assert.match(translations, /\["adminDashboard\.anonymous", "Anonymous feedback", "Feedback ẩn danh"\]/);

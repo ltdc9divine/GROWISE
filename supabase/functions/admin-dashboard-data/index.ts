@@ -276,7 +276,7 @@ async function getRecords(
   const columns = {
     students: "id,full_name,username,student_id,created_at,updated_at",
     consultations: "id,full_name,email,startup_name,industry,monthly_budget,preferred_method,preferred_date,preferred_time,challenge,created_at",
-    feedback: "id,overall_rating,usability_rating,usefulness_rating,marketing_rating,planner_rating,resources_rating,assistant_rating,liked,improve,requested_features,created_at"
+    feedback: "id,submitted_by,submitted_by_student,overall_rating,usability_rating,usefulness_rating,marketing_rating,planner_rating,resources_rating,assistant_rating,liked,improve,requested_features,created_at"
   }[section];
   let request = client.from(table).select(columns, { count: "exact" });
   if (section === "students") {
@@ -297,7 +297,47 @@ async function getRecords(
     .order("id", { ascending: true })
     .range(start, start + pageSize - 1);
   if (error || count === null) throw new RequestError(503, "dashboard_data_unavailable");
-  return { records: data || [], total: count, page, page_size: pageSize };
+  let records = data || [];
+  if (section === "feedback") {
+    const profileIds = [...new Set(
+      records.map((record) => record.submitted_by).filter(Boolean)
+    )];
+    const studentIds = [...new Set(
+      records.map((record) => record.submitted_by_student).filter(Boolean)
+    )];
+    const namesById = new Map<string, string>();
+    if (profileIds.length) {
+      const { data: profiles, error: profilesError } = await client
+        .from("growise_profiles")
+        .select("id,full_name,username")
+        .in("id", profileIds);
+      if (profilesError) {
+        throw new RequestError(503, "dashboard_data_unavailable");
+      }
+      (profiles || []).forEach((profile) => {
+        namesById.set(profile.id, profile.full_name || profile.username);
+      });
+    }
+    if (studentIds.length) {
+      const { data: students, error: studentsError } = await client
+        .from("growise_users")
+        .select("id,full_name")
+        .in("id", studentIds);
+      if (studentsError) {
+        throw new RequestError(503, "dashboard_data_unavailable");
+      }
+      (students || []).forEach((student) => {
+        namesById.set(student.id, student.full_name);
+      });
+    }
+    records = records.map((record) => ({
+      ...record,
+      sender_name: namesById.get(record.submitted_by)
+        || namesById.get(record.submitted_by_student)
+        || null
+    }));
+  }
+  return { records, total: count, page, page_size: pageSize };
 }
 
 Deno.serve(async (request) => {
