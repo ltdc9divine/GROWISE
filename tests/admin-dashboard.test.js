@@ -18,6 +18,42 @@ vm.runInNewContext(
   root
 );
 const dashboardApi = root.window.GrowiseAdminDashboard;
+root.window.Growise.i18n.t = (key) => key;
+
+test("admin dashboard CSV export escapes spreadsheet formulas and CSV values", () => {
+  assert.equal(
+    dashboardApi.toCsv([
+      ["Name", "Feedback"],
+      ["Nguyễn, An", '=HYPERLINK("https://example.com","click")'],
+      ["Line\nbreak", "say \"hello\""]
+    ]),
+    '"Name","Feedback"\r\n"Nguyễn, An","\'=HYPERLINK(""https://example.com"",""click"")"\r\n"Line\nbreak","say ""hello"""'
+  );
+});
+
+test("admin dashboard export includes the fields for each selected data section", () => {
+  const sections = {
+    students: {
+      expectedHeader: "adminDashboard.fullName",
+      record: { id: "1", full_name: "Student", username: "student", student_id: "S1" }
+    },
+    consultations: {
+      expectedHeader: "adminDashboard.challenge",
+      record: { id: "2", full_name: "Founder", challenge: "Need advice" }
+    },
+    feedback: {
+      expectedHeader: "adminDashboard.rating.overall",
+      record: { id: "3", overall_rating: 5, liked: "Useful" }
+    }
+  };
+
+  for (const [section, { expectedHeader, record }] of Object.entries(sections)) {
+    const [headers, values] = dashboardApi.exportRows(section, [record]);
+    assert.ok(headers.includes(expectedHeader));
+    assert.equal(values[0], record.id);
+    assert.equal(values.length, headers.length);
+  }
+});
 
 test("admin dashboard client sends authenticated GET requests using only the publishable key", async () => {
   const calls = [];

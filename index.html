@@ -454,7 +454,10 @@
                 <h3 id="adminDashboardHeading" data-i18n="adminDashboard.heading">GROWISE data dashboard</h3>
                 <p data-i18n="adminDashboard.description">Read-only live data from Supabase.</p>
               </div>
-              <button id="adminDashboardRefresh" class="btn btn-ghost" type="button" data-i18n="adminDashboard.refresh">Refresh data</button>
+              <div class="admin-dashboard-actions">
+                <button id="adminDashboardExport" class="btn btn-ghost" type="button" data-i18n="adminDashboard.export" hidden>Export Excel (CSV)</button>
+                <button id="adminDashboardRefresh" class="btn btn-ghost" type="button" data-i18n="adminDashboard.refresh">Refresh data</button>
+              </div>
             </div>
             <div id="adminDashboardSummary" class="admin-dashboard-summary" aria-live="polite"></div>
             <div class="admin-dashboard-tabs" role="tablist" aria-label="Admin data sections" data-i18n-aria-label="adminDashboard.sections">

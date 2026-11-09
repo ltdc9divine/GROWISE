@@ -47,6 +47,7 @@
 
   const i18n = window.Growise.i18n;
   const pageSize = 10;
+  const exportPageSize = 50;
   const ratingFields = [
     ["overall_rating", "adminDashboard.rating.overall"],
     ["usability_rating", "adminDashboard.rating.usability"],
@@ -91,6 +92,8 @@
   let page = 1;
   let lastResult = null;
   let loading = false;
+  let exporting = false;
+  let exportRevision = 0;
   let requestRevision = 0;
   let initialized = false;
 
@@ -103,6 +106,53 @@
     node.textContent = text ?? "";
     if (className) node.className = className;
     return node;
+  }
+
+  function toCsv(rows) {
+    return rows.map((row) => row.map((value) => {
+      let text = value === null || value === undefined ? "" : String(value);
+      if (/^[\u0000-\u0020]*[=+\-@]/.test(text)) text = `'${text}`;
+      return `"${text.replace(/"/g, '""')}"`;
+    }).join(",")).join("\r\n");
+  }
+
+  function exportRows(recordSection, records) {
+    const columns = {
+      students: [
+        ["adminDashboard.recordId", "id"],
+        ["adminDashboard.fullName", "full_name"],
+        ["adminDashboard.username", "username"],
+        ["adminDashboard.studentId", "student_id"],
+        ["adminDashboard.createdAt", "created_at"],
+        ["adminDashboard.updatedAt", "updated_at"]
+      ],
+      consultations: [
+        ["adminDashboard.recordId", "id"],
+        ["adminDashboard.fullName", "full_name"],
+        ["adminDashboard.email", "email"],
+        ["adminDashboard.startup", "startup_name"],
+        ["adminDashboard.industry", "industry"],
+        ["adminDashboard.budget", "monthly_budget"],
+        ["adminDashboard.method", "preferred_method"],
+        ["adminDashboard.preferredDate", "preferred_date"],
+        ["adminDashboard.preferredTime", "preferred_time"],
+        ["adminDashboard.challenge", "challenge"],
+        ["adminDashboard.createdAt", "created_at"]
+      ],
+      feedback: [
+        ["adminDashboard.recordId", "id"],
+        ...ratingFields.map(([field, labelKey]) => [labelKey, field]),
+        ["adminDashboard.liked", "liked"],
+        ["adminDashboard.improve", "improve"],
+        ["adminDashboard.requestedFeatures", "requested_features"],
+        ["adminDashboard.createdAt", "created_at"]
+      ]
+    }[recordSection];
+    if (!columns) throw new Error("dashboard_export_section_invalid");
+
+    const headers = columns.map(([labelKey]) => i18n.t(labelKey));
+    const rows = records.map((record) => columns.map(([, field]) => record[field]));
+    return [headers, ...rows];
   }
 
   function dateText(value) {
@@ -373,10 +423,15 @@
     element("adminDashboardFilters").hidden = section === "overview";
     element("adminDashboardStatus").hidden = true;
     element("adminDashboardRecords").setAttribute("aria-busy", String(loading));
-    element("adminDashboardRefresh").disabled = loading;
+    const controlsDisabled = loading || exporting;
+    element("adminDashboardRefresh").disabled = controlsDisabled;
+    element("adminDashboardExport").hidden = section === "overview";
+    element("adminDashboardExport").disabled = controlsDisabled || !(result?.total > 0);
     document.querySelectorAll("[data-dashboard-section]").forEach((button) => {
-      button.disabled = loading;
+      button.disabled = controlsDisabled;
     });
+    element("adminDashboardFilters").querySelectorAll("input, select, button")
+      .forEach((control) => { control.disabled = controlsDisabled; });
     if (!result) {
       element("adminDashboardSummary").replaceChildren();
       element("adminDashboardRecords").replaceChildren();
@@ -386,11 +441,13 @@
     renderSummary(result.summary);
     renderRecords(result);
     renderPagination(result);
+    element("adminDashboardPagination").querySelectorAll("button")
+      .forEach((button) => { button.disabled = controlsDisabled || button.disabled; });
   }
 
-  function showStatus(messageKey, error = false) {
+  function showStatus(messageKey, error = false, values = {}) {
     const status = element("adminDashboardStatus");
-    status.textContent = i18n.t(messageKey);
+    status.textContent = i18n.t(messageKey, values);
     status.hidden = false;
     status.dataset.kind = error ? "error" : "info";
   }
@@ -407,6 +464,61 @@
       page,
       page_size: pageSize
     };
+  }
+
+  function downloadCsv(recordSection, records) {
+    const csv = toCsv(exportRows(recordSection, records));
+    const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `growise-${recordSection}-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+  }
+
+  async function exportRecords() {
+    if (!currentSession || section === "overview" || loading || exporting) return;
+    const exportSection = section;
+    const revision = ++exportRevision;
+    const params = { ...requestParams(), page: 1, page_size: exportPageSize };
+    const session = currentSession;
+    exporting = true;
+    render(lastResult);
+    showStatus("adminDashboard.exportLoading");
+    let outcome = null;
+    try {
+      const firstPage = await client.load(session, params);
+      if (revision !== exportRevision) return;
+      const records = [...firstPage.records];
+      const total = firstPage.total;
+      const totalPages = Math.ceil(total / exportPageSize);
+      for (let exportPage = 2; exportPage <= totalPages; exportPage += 1) {
+        const result = await client.load(session, {
+          ...params,
+          page: exportPage
+        });
+        if (revision !== exportRevision) return;
+        if (!result.records.length) throw new Error("dashboard_export_incomplete");
+        records.push(...result.records);
+      }
+      if (records.length !== total) throw new Error("dashboard_export_incomplete");
+      downloadCsv(exportSection, records);
+      outcome = {
+        message: "adminDashboard.exportSuccess",
+        values: { count: records.length }
+      };
+    } catch {
+      if (revision === exportRevision) {
+        outcome = { message: "adminDashboard.exportError", error: true };
+      }
+    } finally {
+      exporting = false;
+      if (revision === exportRevision) {
+        render(lastResult);
+        if (outcome) showStatus(outcome.message, outcome.error, outcome.values);
+      }
+    }
   }
 
   async function refresh() {
@@ -448,6 +560,7 @@
     if (!initialized) {
       initialized = true;
       element("adminDashboardRefresh").addEventListener("click", refresh);
+      element("adminDashboardExport").addEventListener("click", exportRecords);
       element("adminDashboardFilters").addEventListener("submit", (event) => {
         event.preventDefault();
         page = 1;
@@ -480,9 +593,11 @@
 
   function clear() {
     requestRevision += 1;
+    exportRevision += 1;
     currentSession = null;
     lastResult = null;
     loading = false;
+    exporting = false;
     page = 1;
     element("adminDashboardSummary").replaceChildren();
     element("adminDashboardRecords").replaceChildren();
@@ -491,5 +606,5 @@
   }
 
   window.Growise = window.Growise || {};
-  window.GrowiseAdminDashboard = { createClient, initialize, load, clear };
+  window.GrowiseAdminDashboard = { createClient, initialize, load, clear, toCsv, exportRows };
 })();

@@ -3797,6 +3797,12 @@ textarea:focus-visible {
   gap: 12px;
 }
 
+.admin-dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .admin-dashboard-heading h3,
 .admin-dashboard-heading p {
   margin: 0;
